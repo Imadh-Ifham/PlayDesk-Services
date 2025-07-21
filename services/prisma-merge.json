@@ -1,0 +1,4 @@
+{
+  "input": ["./prisma/base.prisma", "./prisma/enums", "./prisma/models"],
+  "output": "./prisma/schema.prisma"
+}

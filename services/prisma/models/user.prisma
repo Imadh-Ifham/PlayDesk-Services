@@ -1,0 +1,17 @@
+model User {
+  id        String     @id @default(cuid())
+  username  String
+  password  String
+  email     String?    @unique
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  loungeId  String
+  roleId    String
+
+  lounge    Lounge     @relation(fields: [loungeId], references: [id])
+  role      Role       @relation(fields: [roleId], references: [id])
+
+  @@unique([username, loungeId])
+}

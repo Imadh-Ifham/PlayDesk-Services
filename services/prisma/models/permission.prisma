@@ -1,0 +1,17 @@
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String
+
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+}

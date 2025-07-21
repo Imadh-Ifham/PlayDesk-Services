@@ -1,0 +1,11 @@
+model Role {
+  id        String   @id @default(cuid())
+  name      String
+  loungeId  String
+
+  lounge    Lounge   @relation(fields: [loungeId], references: [id])
+  users     User[]
+  permissions RolePermission[]
+
+  @@unique([name, loungeId])
+}

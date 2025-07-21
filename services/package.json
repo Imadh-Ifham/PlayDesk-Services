@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "prisma:merge": "npx prisma-merge -b prisma/base.prisma -s prisma/**/*.prisma -o prisma/schema.prisma -e prisma/schema.prisma",
+    "prisma:generate": "pnpm prisma:merge && prisma generate"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +30,7 @@
     "@types/node": "^24.0.15",
     "nodemon": "^3.1.10",
     "prisma": "^6.12.0",
+    "prisma-merge": "^0.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }

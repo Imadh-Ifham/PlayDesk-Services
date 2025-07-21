@@ -1,0 +1,9 @@
+model Lounge {
+  id          String   @id // custom 8-digit string
+  name        String
+  ownerEmail  String   @unique
+  registeredAt DateTime @default(now())
+
+  users       User[]
+  roles       Role[]
+}

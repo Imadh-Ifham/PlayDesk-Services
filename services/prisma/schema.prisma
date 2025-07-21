@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+//******** AUTO GENERATED FILE, DO NOT EDIT.  *********
 
 generator client {
   provider = "prisma-client-js"
@@ -12,4 +8,72 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+
+model Lounge {
+  id          String   @id // custom 8-digit string
+  name        String
+  ownerEmail  String   @unique
+  registeredAt DateTime @default(now())
+
+  users       User[]
+  roles       Role[]
+}
+
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String
+
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+}
+
+
+model Role {
+  id        String   @id @default(cuid())
+  name      String
+  loungeId  String
+
+  lounge    Lounge   @relation(fields: [loungeId], references: [id])
+  users     User[]
+  permissions RolePermission[]
+
+  @@unique([name, loungeId])
+}
+
+
+model User {
+  id        String     @id @default(cuid())
+  username  String
+  password  String
+  email     String?    @unique
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  loungeId  String
+  roleId    String
+
+  lounge    Lounge     @relation(fields: [loungeId], references: [id])
+  role      Role       @relation(fields: [roleId], references: [id])
+
+  @@unique([username, loungeId])
 }
