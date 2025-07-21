@@ -330,3 +330,4 @@ storybook-static/
 
 # Rush temporary files
 common/temp/
+/generated/prisma
