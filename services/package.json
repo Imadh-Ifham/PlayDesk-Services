@@ -8,7 +8,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "prisma:merge": "npx prisma-merge -b prisma/base.prisma -s prisma/**/*.prisma -o prisma/schema.prisma -e prisma/schema.prisma",
-    "prisma:generate": "pnpm prisma:merge && prisma generate"
+    "prisma:generate": "pnpm prisma:merge && prisma generate",
+    "seed": "ts-node src/seeds/index.ts",
+    "seed:permissions": "ts-node src/seeds/permission.seed.ts"
   },
   "keywords": [],
   "author": "",

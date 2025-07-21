@@ -7,6 +7,8 @@ import morgan from "morgan";
 import { errorHandler } from "./middlewares/errorHandler";
 import { authGuard } from "./middlewares/authGuard";
 
+import permissionRoutes from "./modules/user/routes/permission.routes";
+
 // import userRoutes from './modules/user/user.routes';
 // import authRoutes from './modules/auth/auth.routes';
 // import loungeRoutes from './modules/lounge/lounge.routes';
@@ -29,6 +31,7 @@ app.use(authGuard); // This protects all routes below this line
 // app.use('/api/users', userRoutes);
 // app.use('/api/lounge', loungeRoutes);
 // app.use('/api/bookings', bookingRoutes);
+app.use("/api/permissions", permissionRoutes);
 
 // Global error handler
 app.use(errorHandler);
