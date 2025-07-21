@@ -1,6 +1,7 @@
 model Role {
   id        String   @id @default(cuid())
   name      String
+  isDefault Boolean  @default(false)
   loungeId  String
 
   lounge    Lounge   @relation(fields: [loungeId], references: [id])
