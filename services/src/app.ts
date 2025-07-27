@@ -26,7 +26,7 @@ app.use(morgan("dev"));
 // app.use('/api/auth', authRoutes);
 
 // Routes that require auth
-app.use(authGuard); // This protects all routes below this line
+//app.use(authGuard); // This protects all routes below this line
 
 // app.use('/api/users', userRoutes);
 // app.use('/api/lounge', loungeRoutes);

@@ -1,4 +1,5 @@
 import { seedPermissions } from "./permission.seed";
+import { seedDefaultRoles } from "./role.seed";
 import { PrismaClient } from "../../generated/prisma";
 
 const prisma = new PrismaClient();
@@ -7,8 +8,11 @@ async function main() {
   console.log("🌱 Starting database seeding...");
 
   try {
-    // Run permission seeding
+    // Run permission seeding first (roles depend on permissions)
     await seedPermissions();
+
+    // Run role seeding (after permissions are created)
+    await seedDefaultRoles();
 
     console.log("✅ Database seeding completed successfully!");
   } catch (error) {
