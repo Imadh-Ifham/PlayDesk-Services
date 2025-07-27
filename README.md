@@ -1,6 +1,6 @@
-# PlayDesk
+# PlayDesk Services
 
-**PlayDesk** is a scalable and modular Game Lounge Management and Booking System designed for both customers and game lounge owners. Previously branded as **SaloGame**, the project has now evolved into a microservice-based architecture within a monorepo structure, offering better maintainability and scalability.
+**PlayDesk Services** is a scalable and modular Game Lounge Management and Booking System backend designed for both customers and game lounge owners. Previously branded as **SaloGame**, the project has now evolved into a TypeScript-based Node.js service with a modular architecture, offering better maintainability and scalability.
 
 ---
 
@@ -31,45 +31,64 @@ PlayDesk enables:
 
 ## 🏗️ Architecture
 
-- **Microservices** for core domains like bookings, users, machines, and events
-- **Monorepo** to manage all services and apps in a single repository
-- **Shared libraries** for common logic, types, and utilities
-- **API Gateway** or routing system (planned or existing)
-- **Dockerized services** for consistent local development and deployment
+- **Modular Backend Service** with distinct modules for core domains (users, bookings, lounges, machines)
+- **Express.js** REST API with TypeScript
+- **Prisma ORM** for PostgreSQL database management
+- **Firebase Authentication** for secure user management
+- **Modular structure** with dedicated controllers, services, routes, and models per feature
 
 ---
 
 ## 🛠 Tech Stack
 
-| Layer    | Technology             |
-| -------- | ---------------------- |
-| Frontend | React / Next.js        |
-| Backend  | Go / Node.js           |
-| Database | PostgreSQL             |
-| API Comm | REST or gRPC           |
-| Auth     | Firebase Auth / JWT    |
-| Monorepo | pnpm / TurboRepo       |
-| DevOps   | Docker, `.env` configs |
+| Layer    | Technology              |
+| -------- | ----------------------- |
+| Backend  | Node.js + Express.js    |
+| Language | TypeScript              |
+| Database | PostgreSQL + Prisma ORM |
+| Auth     | Firebase Authentication |
+| API      | RESTful API             |
+| Package  | pnpm                    |
 
 ---
 
-## 📁 Monorepo Structure
+## 📁 Project Structure
 
 ```plaintext
-/playdesk
-├── apps/
-│   ├── admin-dashboard/       # Admin frontend app
-│   └── customer-portal/       # Customer frontend app
-├── services/
-│   ├── booking-service/       # Handles booking logic
-│   ├── machine-service/       # Manages game machines inventory
-│   ├── user-service/          # User authentication and profile management
-│   └── event-service/         # Event and promotion management
-├── shared/
-│   ├── utils/                 # Shared utility functions
-│   └── types/                 # Shared types and interfaces
-├── infra/                     # Infrastructure configs (Docker, k8s manifests, etc)
-└── README.md
+/PlayDesk-Services
+├── services/                  # Main backend service
+│   ├── src/                  # Source code
+│   │   ├── app.ts           # Express application setup
+│   │   ├── server.ts        # Server entry point
+│   │   ├── config/          # Configuration files
+│   │   │   ├── db.ts        # Database connection
+│   │   │   └── firebase.ts  # Firebase setup
+│   │   ├── middlewares/     # Express middlewares
+│   │   │   ├── authGuard.ts # Authentication middleware
+│   │   │   └── errorHandler.ts # Error handling
+│   │   ├── modules/         # Feature modules
+│   │   │   ├── user/        # User management (active)
+│   │   │   │   ├── controllers/
+│   │   │   │   ├── models/
+│   │   │   │   ├── routes/
+│   │   │   │   ├── services/
+│   │   │   │   └── types/
+│   │   │   ├── booking/     # Booking system (planned)
+│   │   │   ├── lounge/      # Lounge management (planned)
+│   │   │   └── machine/     # Machine management (planned)
+│   │   ├── seeds/           # Database seeding
+│   │   └── utils/           # Utility functions
+│   ├── prisma/              # Database management
+│   │   ├── schema.prisma    # Database schema
+│   │   ├── base.prisma      # Base schema configuration
+│   │   ├── models/          # Prisma models
+│   │   ├── enums/           # Database enums
+│   │   └── migrations/      # Database migrations
+│   ├── generated/           # Auto-generated Prisma client
+│   ├── package.json         # Dependencies and scripts
+│   ├── tsconfig.json        # TypeScript configuration
+│   └── README.md            # Service-specific documentation
+└── README.md                # This file - project overview
 ```
 
 ## ⚙️ Getting Started
@@ -77,34 +96,100 @@ PlayDesk enables:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/playdesk.git
-cd playdesk
+git clone https://github.com/Imadh-Ifham/PlayDesk-Services.git
+cd PlayDesk-Services
 ```
 
-### 2. Install Dependencies
+### 2. Navigate to Services Directory
+
+```bash
+cd services
+```
+
+### 3. Install Dependencies
 
 ```bash
 pnpm install
 ```
 
-> Make sure pnpm is installed globally (npm i -g pnpm)
+> Make sure pnpm is installed globally (`npm i -g pnpm`)
 
-### 3. Setup Environment Variables
+### 4. Setup Environment Variables
 
-Each service will have its own .env file.
+Create a `.env` file in the services directory:
 
 ```bash
-cp services/booking-service/.env.example services/booking-service/.env
+cp .env.example .env
 ```
 
-### 4. Run Services
+Configure the following environment variables:
 
-Example:
+- Database connection URL
+- Firebase service account credentials
+- Server port and other configurations
+
+### 5. Setup Database
+
+Generate Prisma client and run migrations:
 
 ```bash
-cd services/booking-service
+pnpm prisma:generate
+pnpm prisma migrate dev
+```
+
+### 6. Seed Database (Optional)
+
+Populate the database with initial data:
+
+```bash
+pnpm seed
+```
+
+### 7. Run the Service
+
+Start the development server:
+
+```bash
 pnpm dev
 ```
+
+The API will be available at `http://localhost:3000` (or your configured port).
+
+## 📖 Module Documentation
+
+Each module has its own detailed documentation:
+
+- **User Module**: See `services/src/modules/user/README.md` (when available)
+- **Booking Module**: See `services/src/modules/booking/README.md` (when available)
+- **Lounge Module**: See `services/src/modules/lounge/README.md` (when available)
+- **Machine Module**: See `services/src/modules/machine/README.md` (when available)
+
+For detailed service documentation, refer to `services/README.md`.
+
+## 🔧 Available Scripts
+
+When working in the `services/` directory:
+
+| Script                  | Description                              |
+| ----------------------- | ---------------------------------------- |
+| `pnpm dev`              | Start development server with hot reload |
+| `pnpm build`            | Build the application for production     |
+| `pnpm start`            | Start the production server              |
+| `pnpm prisma:generate`  | Generate Prisma client                   |
+| `pnpm prisma:merge`     | Merge Prisma schema files                |
+| `pnpm seed`             | Seed database with initial data          |
+| `pnpm seed:permissions` | Seed permission data                     |
+
+## 🌐 API Documentation
+
+The API provides RESTful endpoints for:
+
+- **User Management**: Authentication, profiles, roles, and permissions
+- **Booking System**: Time slot management and reservations (in development)
+- **Lounge Management**: Venue and facility management (in development)
+- **Machine Management**: Gaming equipment inventory (in development)
+
+Detailed API documentation will be available at `/api/docs` when the service is running (if implemented).
 
 ---
 
