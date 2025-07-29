@@ -1,0 +1,16 @@
+// Model for the main PlayDesk account (PDAccount)
+model PDAccount {
+  id         String         @id @default(uuid())             // Unique ID for the account
+  name       String                                          // Business or organization name
+  email      String         @unique                          // Contact email (must be unique)
+  phone      String                                          // Contact phone number
+  status     AccountStatus  @default(ACTIVE)                 // Enum: ACTIVE, SUSPENDED, TRIALING
+  logoUrl    String?        @map("logo_url")                 // Optional logo image URL
+  createdAt  DateTime       @default(now()) @map("created_at")   // Timestamp of creation
+  updatedAt  DateTime       @updatedAt @map("updated_at")         // Timestamp of last update
+
+  // Relations
+  lounges    Lounge[]                                       // One PDAccount can own many Lounges
+
+  @@map("pd_accounts")                                      // Maps to the table name `pd_accounts`
+}

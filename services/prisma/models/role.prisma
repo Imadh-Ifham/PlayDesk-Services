@@ -4,7 +4,6 @@ model Role {
   isDefault Boolean  @default(false)
   loungeId  String
 
-  lounge    Lounge   @relation(fields: [loungeId], references: [id])
   users     User[]
   permissions RolePermission[]
 

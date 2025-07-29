@@ -1,0 +1,15 @@
+model Service {
+  id                String   @id @default(uuid())                      // Service ID
+  key               String   @unique                                  // Unique code like 'booking', 'cafe'
+  name              String                                             // Human-readable name
+  description       String?                                            // Description of the service
+  iconUrl           String?  @map("icon_url")                          // Optional UI icon
+  enabledByDefault  Boolean  @default(false) @map("enabled_by_default") // Auto-enabled for new lounges
+  isCoreService     Boolean  @default(false) @map("is_core_service")   // Marks if this is a core service
+  createdAt         DateTime @default(now()) @map("created_at")        // Creation timestamp
+  updatedAt         DateTime @updatedAt @map("updated_at")             // Last update timestamp
+
+  loungeServices  LoungeService[]  // Relation to lounges
+
+  @@map("services")                                                  // Maps to SQL table `services`
+}

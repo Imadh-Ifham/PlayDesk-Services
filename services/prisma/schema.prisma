@@ -10,6 +10,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enum for account status
+enum AccountStatus {
+  ACTIVE     // Account is active and fully operational
+  SUSPENDED  // Account is temporarily disabled
+  TRIALING   // Account is in a trial period
+}
+
+// Enum for lounge status
+enum LoungeStatus {
+  ACTIVE
+  CLOSED
+  PENDING_APPROVAL
+}
+
+
 enum UserStatus {
   ACTIVE
   SUSPENDED
@@ -17,14 +32,56 @@ enum UserStatus {
 }
 
 
-model Lounge {
-  id          String   @id // custom 8-digit string
-  name        String
-  ownerEmail  String   @unique
-  registeredAt DateTime @default(now())
+// Model for the main PlayDesk account (PDAccount)
+model PDAccount {
+  id         String         @id @default(uuid())             // Unique ID for the account
+  name       String                                          // Business or organization name
+  email      String         @unique                          // Contact email (must be unique)
+  phone      String                                          // Contact phone number
+  status     AccountStatus  @default(ACTIVE)                 // Enum: ACTIVE, SUSPENDED, TRIALING
+  logoUrl    String?        @map("logo_url")                 // Optional logo image URL
+  createdAt  DateTime       @default(now()) @map("created_at")   // Timestamp of creation
+  updatedAt  DateTime       @updatedAt @map("updated_at")         // Timestamp of last update
 
-  users       User[]
-  roles       Role[]
+  // Relations
+  lounges    Lounge[]                                       // One PDAccount can own many Lounges
+
+  @@map("pd_accounts")                                      // Maps to the table name `pd_accounts`
+}
+
+
+// Lounge model
+model Lounge {
+  id              String        @id @default(uuid())                    // Lounge ID
+  pdAccountId     String        @map("pd_account_id")                   // Foreign key to SGAccount
+  pdAccount       PDAccount     @relation(fields: [pdAccountId], references: [id], onDelete: Cascade)
+
+  name            String                                             // Lounge name (e.g., “GameZone Colombo”)
+  location        String?                                            // Free text or structured address
+  latitude        Float?                                             // For map integration
+  longitude       Float?                                             // For map integration
+  logoUrl         String?        @map("logo_url")                    // Lounge logo (optional)
+  status          LoungeStatus   @default(ACTIVE)                    // Enum: ACTIVE, CLOSED, PENDING_APPROVAL
+  createdAt       DateTime       @default(now()) @map("created_at")  // Creation timestamp
+  updatedAt       DateTime       @updatedAt     @map("updated_at")   // Last update timestamp
+
+  loungeServices  LoungeService[]  // Relation to lounges
+
+  @@map("lounges")                                                  // Maps to SQL table `lounges`
+}
+
+
+model LoungeService {
+  loungeId   String   @map("lounge_id")                               // FK to lounges.id
+  serviceId  String   @map("service_id")                              // FK to services.id
+  enabled    Boolean  @default(true)                                  // Whether this service is enabled for the lounge
+
+  // Relations
+  lounge     Lounge   @relation(fields: [loungeId], references: [id], onDelete: Cascade)
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([loungeId, serviceId])                                         // Composite primary key
+  @@map("lounge_services")                                            // Maps to SQL table `lounge_services`
 }
 
 
@@ -53,11 +110,27 @@ model Role {
   isDefault Boolean  @default(false)
   loungeId  String
 
-  lounge    Lounge   @relation(fields: [loungeId], references: [id])
   users     User[]
   permissions RolePermission[]
 
   @@unique([name, loungeId])
+}
+
+
+model Service {
+  id                String   @id @default(uuid())                      // Service ID
+  key               String   @unique                                  // Unique code like 'booking', 'cafe'
+  name              String                                             // Human-readable name
+  description       String?                                            // Description of the service
+  iconUrl           String?  @map("icon_url")                          // Optional UI icon
+  enabledByDefault  Boolean  @default(false) @map("enabled_by_default") // Auto-enabled for new lounges
+  isCoreService     Boolean  @default(false) @map("is_core_service")   // Marks if this is a core service
+  createdAt         DateTime @default(now()) @map("created_at")        // Creation timestamp
+  updatedAt         DateTime @updatedAt @map("updated_at")             // Last update timestamp
+
+  loungeServices  LoungeService[]  // Relation to lounges
+
+  @@map("services")                                                  // Maps to SQL table `services`
 }
 
 
@@ -73,8 +146,8 @@ model User {
   loungeId  String
   roleId    String
 
-  lounge    Lounge     @relation(fields: [loungeId], references: [id])
   role      Role       @relation(fields: [roleId], references: [id])
 
   @@unique([username, loungeId])
+  @@map("users")
 }

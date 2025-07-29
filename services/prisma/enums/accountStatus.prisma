@@ -1,0 +1,6 @@
+// Enum for account status
+enum AccountStatus {
+  ACTIVE     // Account is active and fully operational
+  SUSPENDED  // Account is temporarily disabled
+  TRIALING   // Account is in a trial period
+}

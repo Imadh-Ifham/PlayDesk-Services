@@ -1,9 +1,19 @@
+// Lounge model
 model Lounge {
-  id          String   @id // custom 8-digit string
-  name        String
-  ownerEmail  String   @unique
-  registeredAt DateTime @default(now())
+  id              String        @id @default(uuid())                    // Lounge ID
+  pdAccountId     String        @map("pd_account_id")                   // Foreign key to SGAccount
+  pdAccount       PDAccount     @relation(fields: [pdAccountId], references: [id], onDelete: Cascade)
 
-  users       User[]
-  roles       Role[]
+  name            String                                             // Lounge name (e.g., “GameZone Colombo”)
+  location        String?                                            // Free text or structured address
+  latitude        Float?                                             // For map integration
+  longitude       Float?                                             // For map integration
+  logoUrl         String?        @map("logo_url")                    // Lounge logo (optional)
+  status          LoungeStatus   @default(ACTIVE)                    // Enum: ACTIVE, CLOSED, PENDING_APPROVAL
+  createdAt       DateTime       @default(now()) @map("created_at")  // Creation timestamp
+  updatedAt       DateTime       @updatedAt     @map("updated_at")   // Last update timestamp
+
+  loungeServices  LoungeService[]  // Relation to lounges
+
+  @@map("lounges")                                                  // Maps to SQL table `lounges`
 }

@@ -1,0 +1,6 @@
+// Enum for lounge status
+enum LoungeStatus {
+  ACTIVE
+  CLOSED
+  PENDING_APPROVAL
+}

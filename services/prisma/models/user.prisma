@@ -10,8 +10,8 @@ model User {
   loungeId  String
   roleId    String
 
-  lounge    Lounge     @relation(fields: [loungeId], references: [id])
   role      Role       @relation(fields: [roleId], references: [id])
 
   @@unique([username, loungeId])
+  @@map("users")
 }
