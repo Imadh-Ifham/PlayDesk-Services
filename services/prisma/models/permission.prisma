@@ -22,6 +22,6 @@ model RolePermission {
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   lounge       Lounge?     @relation(fields: [loungeId], references: [id], onDelete: Cascade)
 
-  @@id([roleId, permissionId, loungeId])
+  @@id([roleId, permissionId])
   @@map("role_permissions")
 }

@@ -25,6 +25,12 @@ enum LoungeStatus {
 }
 
 
+enum RoleType {
+  SYSTEM   // Developer/internal use only
+  GLOBAL   // Predefined global roles (e.g., Owner, Admin)
+  ACCOUNT  // Account-specific roles
+}
+
 enum UserStatus {
   ACTIVE
   SUSPENDED
@@ -104,15 +110,15 @@ model Permission {
 model RolePermission {
   roleId       String     @map("role_id")
   permissionId String     @map("permission_id")
-  loungeId     String     @map("lounge_id")
+  loungeId     String?     @map("lounge_id")
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  lounge       Lounge     @relation(fields: [loungeId], references: [id], onDelete: Cascade)
+  lounge       Lounge?     @relation(fields: [loungeId], references: [id], onDelete: Cascade)
 
-  @@id([roleId, permissionId, loungeId])
+  @@id([roleId, permissionId])
   @@map("role_permissions")
 }
 
@@ -120,13 +126,13 @@ model RolePermission {
 model Role {
   id        String     @id @default(uuid())
   name      String
-  isDefault Boolean    @default(false)
-  accountId String     @map("account_id")
+  roleType  RoleType   @default(ACCOUNT) @map("role_type")
+  accountId String?    @map("account_id")
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 
   // Relations
-  account     PDAccount        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account     PDAccount?       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   permissions RolePermission[]
   users       User[]
 
