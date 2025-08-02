@@ -162,7 +162,49 @@ Each module has its own detailed documentation:
 - **User Module**: See `services/src/modules/user/README.md` (when available)
 - **Booking Module**: See `services/src/modules/booking/README.md` (when available)
 - **Lounge Module**: See `services/src/modules/lounge/README.md` (when available)
-- **Machine Module**: See `services/src/modules/machine/README.md` (when available)
+- **Machine Module**: See below and `services/src/modules/machine/README.md` (when available)
+
+### Machine Module Updates (August 2025)
+
+The Machine module has been updated with new models and TypeScript interfaces for managing gaming equipment in lounges. Key components:
+
+#### 1. Prisma Schema (`services/prisma/models/machine.prisma`)
+
+- **MachineType Model**
+
+  - Core fields: id, name, specifications, description, imageUrl
+  - Lounge association through loungeId
+  - Relations to Machine model
+  - Timestamps for creation and updates
+
+- **Machine Model**
+  - Unique identifier and serial number tracking
+  - Category enum: Console, PC_L, PC_R
+  - Status tracking (online/offline)
+  - Relations to MachineType and Lounge
+  - Full timestamp support
+
+#### 2. TypeScript Models
+
+**Machine Model** (`src/modules/machine/models/machine.model.ts`)
+
+- Interface for machine data with relations
+- Enums for machine block types and status
+- Type definitions for create/update operations
+- Prisma query include helpers
+
+**MachineType Model** (`src/modules/machine/models/machineType.model.ts`)
+
+- Complete interface for machine types
+- Support for optional specifications and descriptions
+- Lounge relationship handling
+- Create/Update operation types
+
+**Rate Management** (`src/modules/machine/models/rateByPlayers.model.ts`)
+
+- Reserved for future implementation
+- Will handle machine pricing based on player count
+- Support for flexible rate structures
 
 For detailed service documentation, refer to `services/README.md`.
 
