@@ -89,7 +89,7 @@ model LoungeService {
 
 
 model Permission {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   key         String   @unique
   name        String   // Human readable name for the permission
   description String
@@ -118,7 +118,7 @@ model RolePermission {
 
 
 model Role {
-  id        String     @id @default(cuid())
+  id        String     @id @default(uuid())
   name      String
   isDefault Boolean    @default(false)
   accountId String     @map("account_id")
@@ -153,7 +153,7 @@ model Service {
 
 
 model User {
-  id          String     @id @default(cuid())
+  id          String     @id @default(uuid())
   username    String
   password    String
   email       String?    @unique

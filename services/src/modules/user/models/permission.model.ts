@@ -148,7 +148,7 @@ export const DefaultPermissions = {
 // Permission validation rules
 export const PermissionValidation = {
   KEY_MIN_LENGTH: 3,
-  KEY_MAX_LENGTH: 100,
+  KEY_MAX_LENGTH: 20,
   NAME_MIN_LENGTH: 3,
   NAME_MAX_LENGTH: 50,
   DESCRIPTION_MIN_LENGTH: 5,
@@ -178,7 +178,22 @@ export function permissionsToResponse(
 
 // Helper function to validate permission key format
 export function isValidPermissionKey(key: string): boolean {
-  return PermissionValidation.KEY_PATTERN.test(key);
+  // Must match the pattern and contain only one dot
+  if (!PermissionValidation.KEY_PATTERN.test(key)) return false;
+
+  const parts = key.split(".");
+  if (parts.length !== 2) return false; // Only one dot allowed: category.action
+
+  const [category, action] = parts;
+
+  const isValidCategory = Object.values(PermissionCategories).includes(
+    category as PermissionCategories
+  );
+  const isValidAction = Object.values(PermissionActions).includes(
+    action as PermissionActions
+  );
+
+  return isValidCategory && isValidAction;
 }
 
 // Helper function to get permission category from key

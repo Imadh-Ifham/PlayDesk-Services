@@ -1,5 +1,5 @@
 model Permission {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   key         String   @unique
   name        String   // Human readable name for the permission
   description String

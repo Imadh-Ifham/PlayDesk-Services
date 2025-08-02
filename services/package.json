@@ -9,11 +9,11 @@
     "start": "node dist/server.js",
     "prisma:merge": "npx prisma-merge -b prisma/base.prisma -s prisma/**/*.prisma -o prisma/schema.prisma -e prisma/schema.prisma",
     "prisma:generate": "pnpm prisma:merge && prisma generate",
+    "migrate": "ts-node scripts/migrate.ts",
     "seed": "ts-node src/seeds/index.ts",
     "seed:permissions": "ts-node src/seeds/permission.seed.ts",
     "seed:roles": "ts-node src/seeds/role.seed.ts",
-    "seed:roles:test": "ts-node src/seeds/role.test.ts",
-    "seed:all": "pnpm seed:permissions && pnpm seed:roles"
+    "seed:roles:test": "ts-node src/seeds/role.test.ts"
   },
   "keywords": [],
   "author": "",
