@@ -18,6 +18,7 @@ import {
 export const getRoles = async (req: Request, res: Response) => {
   try {
     const {
+      accountId,
       loungeId,
       isDefault,
       search,
@@ -34,8 +35,8 @@ export const getRoles = async (req: Request, res: Response) => {
     // Build where clause
     const where: any = {};
 
-    if (loungeId) {
-      where.loungeId = loungeId;
+    if (accountId) {
+      where.accountId = accountId;
     }
 
     if (typeof isDefault === "string") {
@@ -46,12 +47,15 @@ export const getRoles = async (req: Request, res: Response) => {
       where.name = { contains: search, mode: "insensitive" };
     }
 
-    if (hasPermission) {
+    if (hasPermission || loungeId) {
       where.permissions = {
         some: {
-          permission: {
-            key: hasPermission,
-          },
+          ...(hasPermission && {
+            permission: {
+              key: hasPermission,
+            },
+          }),
+          ...(loungeId && { loungeId }),
         },
       };
     }
@@ -60,11 +64,12 @@ export const getRoles = async (req: Request, res: Response) => {
     const roles = await prisma.role.findMany({
       where,
       include: {
-        lounge: true,
+        account: true,
         users: true,
         permissions: {
           include: {
             permission: true,
+            lounge: true,
           },
         },
       },
@@ -102,11 +107,12 @@ export const getRoleById = async (req: Request, res: Response) => {
     const role = await prisma.role.findUnique({
       where: { id },
       include: {
-        lounge: true,
+        account: true,
         users: true,
         permissions: {
           include: {
             permission: true,
+            lounge: true,
           },
         },
       },
@@ -129,15 +135,16 @@ export const createRole = async (req: Request, res: Response) => {
   try {
     const {
       name,
+      accountId,
       loungeId,
       isDefault = false,
       permissionIds = [],
     }: CreateRoleInput = req.body;
 
     // Validate input
-    if (!name || !loungeId) {
+    if (!name || !accountId || !loungeId) {
       return res.status(400).json({
-        error: "Name and loungeId are required",
+        error: "Name, accountId, and loungeId are required",
       });
     }
 
@@ -162,6 +169,15 @@ export const createRole = async (req: Request, res: Response) => {
       });
     }
 
+    // Check if account exists
+    const account = await prisma.pDAccount.findUnique({
+      where: { id: accountId },
+    });
+
+    if (!account) {
+      return res.status(404).json({ error: "Account not found" });
+    }
+
     // Check if lounge exists
     const lounge = await prisma.lounge.findUnique({
       where: { id: loungeId },
@@ -171,17 +187,17 @@ export const createRole = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Lounge not found" });
     }
 
-    // Check if role name already exists in this lounge
+    // Check if role name already exists in this account
     const existingRole = await prisma.role.findFirst({
       where: {
         name,
-        loungeId,
+        accountId,
       },
     });
 
     if (existingRole) {
       return res.status(409).json({
-        error: "Role with this name already exists in this lounge",
+        error: "Role with this name already exists in this account",
       });
     }
 
@@ -204,20 +220,22 @@ export const createRole = async (req: Request, res: Response) => {
     const role = await prisma.role.create({
       data: {
         name,
-        loungeId,
+        accountId,
         isDefault,
         permissions: {
           create: permissionIds.map((permissionId) => ({
             permissionId,
+            loungeId,
           })),
         },
       },
       include: {
-        lounge: true,
+        account: true,
         users: true,
         permissions: {
           include: {
             permission: true,
+            lounge: true,
           },
         },
       },
@@ -235,7 +253,8 @@ export const createRole = async (req: Request, res: Response) => {
 export const updateRole = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, isDefault, permissionIds }: UpdateRoleInput = req.body;
+    const { name, isDefault, permissionIds, loungeId }: UpdateRoleInput =
+      req.body;
 
     // Check if role exists
     const existingRole = await prisma.role.findUnique({
@@ -267,18 +286,18 @@ export const updateRole = async (req: Request, res: Response) => {
         });
       }
 
-      // Check if name already exists in this lounge (excluding current role)
+      // Check if name already exists in this account (excluding current role)
       const duplicateRole = await prisma.role.findFirst({
         where: {
           name,
-          loungeId: existingRole.loungeId,
+          accountId: existingRole.accountId,
           id: { not: id },
         },
       });
 
       if (duplicateRole) {
         return res.status(409).json({
-          error: "Role with this name already exists in this lounge",
+          error: "Role with this name already exists in this account",
         });
       }
     }
@@ -307,6 +326,17 @@ export const updateRole = async (req: Request, res: Response) => {
       }
     }
 
+    // Validate loungeId if provided for permission updates
+    if (permissionIds && loungeId) {
+      const lounge = await prisma.lounge.findUnique({
+        where: { id: loungeId },
+      });
+
+      if (!lounge) {
+        return res.status(404).json({ error: "Lounge not found" });
+      }
+    }
+
     // Update role
     const updateData: any = {};
     if (name) updateData.name = name;
@@ -316,21 +346,25 @@ export const updateRole = async (req: Request, res: Response) => {
       where: { id },
       data: updateData,
       include: {
-        lounge: true,
+        account: true,
         users: true,
         permissions: {
           include: {
             permission: true,
+            lounge: true,
           },
         },
       },
     });
 
     // Update permissions if provided
-    if (permissionIds) {
-      // Remove existing permissions
+    if (permissionIds && loungeId) {
+      // Remove existing permissions for this lounge
       await prisma.rolePermission.deleteMany({
-        where: { roleId: id },
+        where: {
+          roleId: id,
+          loungeId: loungeId,
+        },
       });
 
       // Add new permissions
@@ -339,6 +373,7 @@ export const updateRole = async (req: Request, res: Response) => {
           data: permissionIds.map((permissionId) => ({
             roleId: id,
             permissionId,
+            loungeId,
           })),
         });
       }
@@ -347,11 +382,12 @@ export const updateRole = async (req: Request, res: Response) => {
       const updatedRole = await prisma.role.findUnique({
         where: { id },
         include: {
-          lounge: true,
+          account: true,
           users: true,
           permissions: {
             include: {
               permission: true,
+              lounge: true,
             },
           },
         },
@@ -378,11 +414,12 @@ export const deleteRole = async (req: Request, res: Response) => {
     const existingRole = await prisma.role.findUnique({
       where: { id },
       include: {
-        lounge: true,
+        account: true,
         users: true,
         permissions: {
           include: {
             permission: true,
+            lounge: true,
           },
         },
       },
@@ -422,28 +459,29 @@ export const deleteRole = async (req: Request, res: Response) => {
   }
 };
 
-// Get roles by lounge
-export const getRolesByLounge = async (req: Request, res: Response) => {
+// Get roles by account
+export const getRolesByAccount = async (req: Request, res: Response) => {
   try {
-    const { loungeId } = req.params;
+    const { accountId } = req.params;
 
-    // Check if lounge exists
-    const lounge = await prisma.lounge.findUnique({
-      where: { id: loungeId },
+    // Check if account exists
+    const account = await prisma.pDAccount.findUnique({
+      where: { id: accountId },
     });
 
-    if (!lounge) {
-      return res.status(404).json({ error: "Lounge not found" });
+    if (!account) {
+      return res.status(404).json({ error: "Account not found" });
     }
 
     const roles = await prisma.role.findMany({
-      where: { loungeId },
+      where: { accountId },
       include: {
-        lounge: true,
+        account: true,
         users: true,
         permissions: {
           include: {
             permission: true,
+            lounge: true,
           },
         },
       },
@@ -453,8 +491,8 @@ export const getRolesByLounge = async (req: Request, res: Response) => {
     const response = rolesToResponse(roles);
     res.json(response);
   } catch (error) {
-    console.error("Error fetching roles by lounge:", error);
-    res.status(500).json({ error: "Failed to fetch roles by lounge" });
+    console.error("Error fetching roles by account:", error);
+    res.status(500).json({ error: "Failed to fetch roles by account" });
   }
 };
 
@@ -515,11 +553,11 @@ export const getRoleStats = async (req: Request, res: Response) => {
 // Assign permission to role
 export const assignPermissionToRole = async (req: Request, res: Response) => {
   try {
-    const { roleId, permissionId } = req.body;
+    const { roleId, permissionId, loungeId } = req.body;
 
-    if (!roleId || !permissionId) {
+    if (!roleId || !permissionId || !loungeId) {
       return res.status(400).json({
-        error: "Role ID and Permission ID are required",
+        error: "Role ID, Permission ID, and Lounge ID are required",
       });
     }
 
@@ -541,19 +579,29 @@ export const assignPermissionToRole = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Permission not found" });
     }
 
+    // Check if lounge exists
+    const lounge = await prisma.lounge.findUnique({
+      where: { id: loungeId },
+    });
+
+    if (!lounge) {
+      return res.status(404).json({ error: "Lounge not found" });
+    }
+
     // Check if assignment already exists
     const existingAssignment = await prisma.rolePermission.findUnique({
       where: {
-        roleId_permissionId: {
+        roleId_permissionId_loungeId: {
           roleId,
           permissionId,
+          loungeId,
         },
       },
     });
 
     if (existingAssignment) {
       return res.status(409).json({
-        error: "Permission is already assigned to this role",
+        error: "Permission is already assigned to this role for this lounge",
       });
     }
 
@@ -562,6 +610,7 @@ export const assignPermissionToRole = async (req: Request, res: Response) => {
       data: {
         roleId,
         permissionId,
+        loungeId,
       },
     });
 
@@ -569,6 +618,7 @@ export const assignPermissionToRole = async (req: Request, res: Response) => {
       message: "Permission assigned to role successfully",
       roleId,
       permissionId,
+      loungeId,
     });
   } catch (error) {
     console.error("Error assigning permission to role:", error);
@@ -579,14 +629,15 @@ export const assignPermissionToRole = async (req: Request, res: Response) => {
 // Remove permission from role
 export const removePermissionFromRole = async (req: Request, res: Response) => {
   try {
-    const { roleId, permissionId } = req.params;
+    const { roleId, permissionId, loungeId } = req.params;
 
     // Check if assignment exists
     const existingAssignment = await prisma.rolePermission.findUnique({
       where: {
-        roleId_permissionId: {
+        roleId_permissionId_loungeId: {
           roleId,
           permissionId,
+          loungeId,
         },
       },
     });
@@ -600,9 +651,10 @@ export const removePermissionFromRole = async (req: Request, res: Response) => {
     // Remove assignment
     await prisma.rolePermission.delete({
       where: {
-        roleId_permissionId: {
+        roleId_permissionId_loungeId: {
           roleId,
           permissionId,
+          loungeId,
         },
       },
     });

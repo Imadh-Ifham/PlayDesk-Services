@@ -117,12 +117,12 @@ export const getPermissionById = async (req: Request, res: Response) => {
 // Create new permission
 export const createPermission = async (req: Request, res: Response) => {
   try {
-    const { key, description }: CreatePermissionInput = req.body;
+    const { key, name, description }: CreatePermissionInput = req.body;
 
     // Validate input
-    if (!key || !description) {
+    if (!key || !name || !description) {
       return res.status(400).json({
-        error: "Key and description are required",
+        error: "Key, name, and description are required",
       });
     }
 
@@ -132,6 +132,15 @@ export const createPermission = async (req: Request, res: Response) => {
     ) {
       return res.status(400).json({
         error: `Key must be between ${PermissionValidation.KEY_MIN_LENGTH} and ${PermissionValidation.KEY_MAX_LENGTH} characters`,
+      });
+    }
+
+    if (
+      name.length < PermissionValidation.NAME_MIN_LENGTH ||
+      name.length > PermissionValidation.NAME_MAX_LENGTH
+    ) {
+      return res.status(400).json({
+        error: `Name must be between ${PermissionValidation.NAME_MIN_LENGTH} and ${PermissionValidation.NAME_MAX_LENGTH} characters`,
       });
     }
 
@@ -166,6 +175,7 @@ export const createPermission = async (req: Request, res: Response) => {
     const permission = await prisma.permission.create({
       data: {
         key,
+        name,
         description,
       },
       include: {
@@ -189,7 +199,7 @@ export const createPermission = async (req: Request, res: Response) => {
 export const updatePermission = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { key, description }: UpdatePermissionInput = req.body;
+    const { key, name, description }: UpdatePermissionInput = req.body;
 
     // Check if permission exists
     const existingPermission = await prisma.permission.findUnique({
@@ -230,6 +240,18 @@ export const updatePermission = async (req: Request, res: Response) => {
       }
     }
 
+    // Validate name if provided
+    if (name) {
+      if (
+        name.length < PermissionValidation.NAME_MIN_LENGTH ||
+        name.length > PermissionValidation.NAME_MAX_LENGTH
+      ) {
+        return res.status(400).json({
+          error: `Name must be between ${PermissionValidation.NAME_MIN_LENGTH} and ${PermissionValidation.NAME_MAX_LENGTH} characters`,
+        });
+      }
+    }
+
     // Validate description if provided
     if (description) {
       if (
@@ -247,6 +269,7 @@ export const updatePermission = async (req: Request, res: Response) => {
       where: { id },
       data: {
         ...(key && { key }),
+        ...(name && { name }),
         ...(description && { description }),
       },
       include: {

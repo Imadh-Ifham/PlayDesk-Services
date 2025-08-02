@@ -16,12 +16,14 @@ export interface PermissionWithRoles extends Permission {
 // Create permission input
 export interface CreatePermissionInput {
   key: string;
+  name: string;
   description: string;
 }
 
 // Update permission input
 export interface UpdatePermissionInput {
   key?: string;
+  name?: string;
   description?: string;
 }
 
@@ -29,6 +31,7 @@ export interface UpdatePermissionInput {
 export interface PermissionResponse {
   id: string;
   key: string;
+  name: string;
   description: string;
   roleCount?: number; // Count of roles with this permission
 }
@@ -146,6 +149,8 @@ export const DefaultPermissions = {
 export const PermissionValidation = {
   KEY_MIN_LENGTH: 3,
   KEY_MAX_LENGTH: 100,
+  NAME_MIN_LENGTH: 3,
+  NAME_MAX_LENGTH: 50,
   DESCRIPTION_MIN_LENGTH: 5,
   DESCRIPTION_MAX_LENGTH: 255,
   KEY_PATTERN: /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/, // e.g., user.create, lounge.manage
@@ -158,6 +163,7 @@ export function permissionToResponse(
   return {
     id: permission.id,
     key: permission.key,
+    name: permission.name,
     description: permission.description,
     roleCount: permission.roles?.length || 0,
   };

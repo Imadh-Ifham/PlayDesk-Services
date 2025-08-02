@@ -1,17 +1,18 @@
 model User {
-  id        String     @id @default(cuid())
-  username  String
-  password  String
-  email     String?    @unique
-  status    UserStatus @default(ACTIVE)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id          String     @id @default(cuid())
+  username    String
+  password    String
+  email       String?    @unique
+  status      UserStatus @default(ACTIVE)
+  pdAccountId String     @map("pd_account_id")
+  roleId      String     @map("role_id")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
 
-  loungeId  String
-  roleId    String
+  // Relations
+  pdAccount   PDAccount  @relation(fields: [pdAccountId], references: [id], onDelete: Cascade)
+  role        Role       @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
-  role      Role       @relation(fields: [roleId], references: [id])
-
-  @@unique([username, loungeId])
+  @@unique([username, pdAccountId])
   @@map("users")
 }

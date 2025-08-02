@@ -1,11 +1,16 @@
 model Role {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  isDefault Boolean  @default(false)
-  loungeId  String
+  isDefault Boolean    @default(false)
+  accountId String     @map("account_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
 
-  users     User[]
+  // Relations
+  account     PDAccount        @relation(fields: [accountId], references: [id], onDelete: Cascade)
   permissions RolePermission[]
+  users       User[]
 
-  @@unique([name, loungeId])
+  @@unique([name, accountId])
+  @@map("roles")
 }

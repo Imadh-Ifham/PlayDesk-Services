@@ -11,6 +11,8 @@ model PDAccount {
 
   // Relations
   lounges    Lounge[]                                       // One PDAccount can own many Lounges
+  users      User[]                                         // One PDAccount can have many Users
+  roles      Role[]                                         // One PDAccount can have many Roles
 
   @@map("pd_accounts")                                      // Maps to the table name `pd_accounts`
 }
