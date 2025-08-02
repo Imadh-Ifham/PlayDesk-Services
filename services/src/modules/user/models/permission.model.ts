@@ -177,23 +177,14 @@ export function permissionsToResponse(
 }
 
 // Helper function to validate permission key format
-export function isValidPermissionKey(key: string): boolean {
+export function isValidPermissionKeyFormat(key: string): boolean {
   // Must match the pattern and contain only one dot
   if (!PermissionValidation.KEY_PATTERN.test(key)) return false;
 
   const parts = key.split(".");
   if (parts.length !== 2) return false; // Only one dot allowed: category.action
 
-  const [category, action] = parts;
-
-  const isValidCategory = Object.values(PermissionCategories).includes(
-    category as PermissionCategories
-  );
-  const isValidAction = Object.values(PermissionActions).includes(
-    action as PermissionActions
-  );
-
-  return isValidCategory && isValidAction;
+  return true;
 }
 
 // Helper function to get permission category from key
@@ -208,9 +199,23 @@ export function getPermissionAction(key: string): string {
   return parts[parts.length - 1] || "";
 }
 
+// Helper function to check if permission key Category is valid
+export function isPermissionCategoryValid(key: string): boolean {
+  const category = getPermissionCategory(key);
+  return Object.values(PermissionCategories).includes(
+    category as PermissionCategories
+  );
+}
+
+// Helper function to check if permission action is valid
+export function isPermissionActionValid(key: string): boolean {
+  const action = getPermissionAction(key);
+  return Object.values(PermissionActions).includes(action as PermissionActions);
+}
+
 // Helper function to check if permission is system-level
-export function isSystemPermission(permission: Permission): boolean {
-  return permission.key.startsWith("system.");
+export function isSystemPermission(key: string): boolean {
+  return key.startsWith("system.");
 }
 
 // Helper function to group permissions by category

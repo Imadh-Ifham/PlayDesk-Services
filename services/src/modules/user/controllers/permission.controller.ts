@@ -7,9 +7,13 @@ import {
   PermissionPaginationOptions,
   permissionToResponse,
   permissionsToResponse,
-  isValidPermissionKey,
+  isValidPermissionKeyFormat,
   groupPermissionsByCategory,
   PermissionValidation,
+  isPermissionCategoryValid,
+  isPermissionActionValid,
+  PermissionCategories,
+  PermissionActions,
 } from "../models/permission.model";
 
 // Get all permissions with optional filtering and pagination
@@ -153,10 +157,26 @@ export const createPermission = async (req: Request, res: Response) => {
       });
     }
 
-    if (!isValidPermissionKey(key)) {
+    if (!isValidPermissionKeyFormat(key)) {
       return res.status(400).json({
         error:
           "Invalid permission key format. Use lowercase letters, numbers, and dots (e.g., user.create)",
+      });
+    }
+
+    if (!isPermissionCategoryValid(key)) {
+      return res.status(400).json({
+        error: `Invalid permission category. It should be one of: ${Object.values(
+          PermissionCategories
+        ).join(", ")}`,
+      });
+    }
+
+    if (!isPermissionActionValid(key)) {
+      return res.status(400).json({
+        error: `Invalid permission action. It should be one of: ${Object.values(
+          PermissionActions
+        ).join(", ")}`,
       });
     }
 
@@ -221,10 +241,26 @@ export const updatePermission = async (req: Request, res: Response) => {
         });
       }
 
-      if (!isValidPermissionKey(key)) {
+      if (!isValidPermissionKeyFormat(key)) {
         return res.status(400).json({
           error:
             "Invalid permission key format. Use lowercase letters, numbers, and dots (e.g., user.create)",
+        });
+      }
+
+      if (!isPermissionCategoryValid(key)) {
+        return res.status(400).json({
+          error: `Invalid permission category. It should be one of: ${Object.values(
+            PermissionCategories
+          ).join(", ")}`,
+        });
+      }
+
+      if (!isPermissionActionValid(key)) {
+        return res.status(400).json({
+          error: `Invalid permission action. It should be one of: ${Object.values(
+            PermissionActions
+          ).join(", ")}`,
         });
       }
 
@@ -319,7 +355,10 @@ export const deletePermission = async (req: Request, res: Response) => {
       where: { id },
     });
 
-    res.status(204).send();
+    res.status(200).json({
+      key: existingPermission.key,
+      message: `Successfully deleted '${existingPermission.key}' permission`,
+    });
   } catch (error) {
     console.error("Error deleting permission:", error);
     res.status(500).json({ error: "Failed to delete permission" });
