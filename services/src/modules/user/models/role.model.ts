@@ -4,6 +4,7 @@ import {
   Lounge,
   RolePermission,
   Permission,
+  PDAccount,
 } from "../../../../generated/prisma";
 
 // Re-export the Prisma-generated Role type with our extension
@@ -11,14 +12,16 @@ export interface RoleModel {
   id: string;
   name: string;
   isDefault: boolean;
-  loungeId: string;
+  accountId: string;
 }
 
 // Role with relations
 export interface RoleWithRelations extends RoleModel {
-  lounge: Lounge;
+  account: PDAccount;
   users?: User[];
-  permissions: Array<RolePermission & { permission: Permission }>;
+  permissions: Array<
+    RolePermission & { permission: Permission; lounge: Lounge }
+  >;
 }
 
 // Role with permissions (simplified structure)
@@ -29,7 +32,8 @@ export interface RoleWithPermissions extends RoleModel {
 // Create role input
 export interface CreateRoleInput {
   name: string;
-  loungeId: string;
+  accountId: string;
+  loungeId: string; // For the role permissions
   isDefault?: boolean;
   permissionIds?: string[];
 }
@@ -39,6 +43,7 @@ export interface UpdateRoleInput {
   name?: string;
   isDefault?: boolean;
   permissionIds?: string[];
+  loungeId?: string; // For updating role permissions
 }
 
 // Role response (public data)
@@ -46,14 +51,15 @@ export interface RoleResponse {
   id: string;
   name: string;
   isDefault: boolean;
-  loungeId: string;
+  accountId: string;
   permissions?: Permission[];
   userCount?: number; // Count of users with this role
 }
 
 // Role query filters
 export interface RoleFilters {
-  loungeId?: string;
+  accountId?: string;
+  loungeId?: string; // For filtering role permissions by lounge
   isDefault?: boolean;
   search?: string; // For name search
   hasPermission?: string; // Filter by permission key
@@ -114,7 +120,7 @@ export function roleToResponse(role: RoleWithRelations): RoleResponse {
     id: role.id,
     name: role.name,
     isDefault: role.isDefault,
-    loungeId: role.loungeId,
+    accountId: role.accountId,
     permissions: role.permissions.map((rp) => rp.permission),
     userCount: role.users?.length || 0,
   };

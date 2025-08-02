@@ -16,12 +16,14 @@ export interface PermissionWithRoles extends Permission {
 // Create permission input
 export interface CreatePermissionInput {
   key: string;
+  name: string;
   description: string;
 }
 
 // Update permission input
 export interface UpdatePermissionInput {
   key?: string;
+  name?: string;
   description?: string;
 }
 
@@ -29,6 +31,7 @@ export interface UpdatePermissionInput {
 export interface PermissionResponse {
   id: string;
   key: string;
+  name: string;
   description: string;
   roleCount?: number; // Count of roles with this permission
 }
@@ -145,7 +148,9 @@ export const DefaultPermissions = {
 // Permission validation rules
 export const PermissionValidation = {
   KEY_MIN_LENGTH: 3,
-  KEY_MAX_LENGTH: 100,
+  KEY_MAX_LENGTH: 20,
+  NAME_MIN_LENGTH: 3,
+  NAME_MAX_LENGTH: 50,
   DESCRIPTION_MIN_LENGTH: 5,
   DESCRIPTION_MAX_LENGTH: 255,
   KEY_PATTERN: /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/, // e.g., user.create, lounge.manage
@@ -158,6 +163,7 @@ export function permissionToResponse(
   return {
     id: permission.id,
     key: permission.key,
+    name: permission.name,
     description: permission.description,
     roleCount: permission.roles?.length || 0,
   };
@@ -171,8 +177,14 @@ export function permissionsToResponse(
 }
 
 // Helper function to validate permission key format
-export function isValidPermissionKey(key: string): boolean {
-  return PermissionValidation.KEY_PATTERN.test(key);
+export function isValidPermissionKeyFormat(key: string): boolean {
+  // Must match the pattern and contain only one dot
+  if (!PermissionValidation.KEY_PATTERN.test(key)) return false;
+
+  const parts = key.split(".");
+  if (parts.length !== 2) return false; // Only one dot allowed: category.action
+
+  return true;
 }
 
 // Helper function to get permission category from key
@@ -187,9 +199,23 @@ export function getPermissionAction(key: string): string {
   return parts[parts.length - 1] || "";
 }
 
+// Helper function to check if permission key Category is valid
+export function isPermissionCategoryValid(key: string): boolean {
+  const category = getPermissionCategory(key);
+  return Object.values(PermissionCategories).includes(
+    category as PermissionCategories
+  );
+}
+
+// Helper function to check if permission action is valid
+export function isPermissionActionValid(key: string): boolean {
+  const action = getPermissionAction(key);
+  return Object.values(PermissionActions).includes(action as PermissionActions);
+}
+
 // Helper function to check if permission is system-level
-export function isSystemPermission(permission: Permission): boolean {
-  return permission.key.startsWith("system.");
+export function isSystemPermission(key: string): boolean {
+  return key.startsWith("system.");
 }
 
 // Helper function to group permissions by category

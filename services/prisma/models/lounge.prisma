@@ -14,6 +14,7 @@ model Lounge {
   updatedAt       DateTime       @updatedAt     @map("updated_at")   // Last update timestamp
 
   loungeServices  LoungeService[]  // Relation to lounges
+  rolePermissions RolePermission[] // Relation to role permissions
 
   @@map("lounges")                                                  // Maps to SQL table `lounges`
 }

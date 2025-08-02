@@ -1,0 +1,5 @@
+enum RoleType {
+  SYSTEM   // Developer/internal use only
+  GLOBAL   // Predefined global roles (e.g., Owner, Admin)
+  ACCOUNT  // Account-specific roles
+}

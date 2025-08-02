@@ -7,9 +7,13 @@ import {
   PermissionPaginationOptions,
   permissionToResponse,
   permissionsToResponse,
-  isValidPermissionKey,
+  isValidPermissionKeyFormat,
   groupPermissionsByCategory,
   PermissionValidation,
+  isPermissionCategoryValid,
+  isPermissionActionValid,
+  PermissionCategories,
+  PermissionActions,
 } from "../models/permission.model";
 
 // Get all permissions with optional filtering and pagination
@@ -117,12 +121,12 @@ export const getPermissionById = async (req: Request, res: Response) => {
 // Create new permission
 export const createPermission = async (req: Request, res: Response) => {
   try {
-    const { key, description }: CreatePermissionInput = req.body;
+    const { key, name, description }: CreatePermissionInput = req.body;
 
     // Validate input
-    if (!key || !description) {
+    if (!key || !name || !description) {
       return res.status(400).json({
-        error: "Key and description are required",
+        error: "Key, name, and description are required",
       });
     }
 
@@ -136,6 +140,15 @@ export const createPermission = async (req: Request, res: Response) => {
     }
 
     if (
+      name.length < PermissionValidation.NAME_MIN_LENGTH ||
+      name.length > PermissionValidation.NAME_MAX_LENGTH
+    ) {
+      return res.status(400).json({
+        error: `Name must be between ${PermissionValidation.NAME_MIN_LENGTH} and ${PermissionValidation.NAME_MAX_LENGTH} characters`,
+      });
+    }
+
+    if (
       description.length < PermissionValidation.DESCRIPTION_MIN_LENGTH ||
       description.length > PermissionValidation.DESCRIPTION_MAX_LENGTH
     ) {
@@ -144,10 +157,26 @@ export const createPermission = async (req: Request, res: Response) => {
       });
     }
 
-    if (!isValidPermissionKey(key)) {
+    if (!isValidPermissionKeyFormat(key)) {
       return res.status(400).json({
         error:
           "Invalid permission key format. Use lowercase letters, numbers, and dots (e.g., user.create)",
+      });
+    }
+
+    if (!isPermissionCategoryValid(key)) {
+      return res.status(400).json({
+        error: `Invalid permission category. It should be one of: ${Object.values(
+          PermissionCategories
+        ).join(", ")}`,
+      });
+    }
+
+    if (!isPermissionActionValid(key)) {
+      return res.status(400).json({
+        error: `Invalid permission action. It should be one of: ${Object.values(
+          PermissionActions
+        ).join(", ")}`,
       });
     }
 
@@ -166,6 +195,7 @@ export const createPermission = async (req: Request, res: Response) => {
     const permission = await prisma.permission.create({
       data: {
         key,
+        name,
         description,
       },
       include: {
@@ -189,7 +219,7 @@ export const createPermission = async (req: Request, res: Response) => {
 export const updatePermission = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { key, description }: UpdatePermissionInput = req.body;
+    const { key, name, description }: UpdatePermissionInput = req.body;
 
     // Check if permission exists
     const existingPermission = await prisma.permission.findUnique({
@@ -211,10 +241,26 @@ export const updatePermission = async (req: Request, res: Response) => {
         });
       }
 
-      if (!isValidPermissionKey(key)) {
+      if (!isValidPermissionKeyFormat(key)) {
         return res.status(400).json({
           error:
             "Invalid permission key format. Use lowercase letters, numbers, and dots (e.g., user.create)",
+        });
+      }
+
+      if (!isPermissionCategoryValid(key)) {
+        return res.status(400).json({
+          error: `Invalid permission category. It should be one of: ${Object.values(
+            PermissionCategories
+          ).join(", ")}`,
+        });
+      }
+
+      if (!isPermissionActionValid(key)) {
+        return res.status(400).json({
+          error: `Invalid permission action. It should be one of: ${Object.values(
+            PermissionActions
+          ).join(", ")}`,
         });
       }
 
@@ -226,6 +272,18 @@ export const updatePermission = async (req: Request, res: Response) => {
       if (duplicatePermission && duplicatePermission.id !== id) {
         return res.status(409).json({
           error: "Permission with this key already exists",
+        });
+      }
+    }
+
+    // Validate name if provided
+    if (name) {
+      if (
+        name.length < PermissionValidation.NAME_MIN_LENGTH ||
+        name.length > PermissionValidation.NAME_MAX_LENGTH
+      ) {
+        return res.status(400).json({
+          error: `Name must be between ${PermissionValidation.NAME_MIN_LENGTH} and ${PermissionValidation.NAME_MAX_LENGTH} characters`,
         });
       }
     }
@@ -247,6 +305,7 @@ export const updatePermission = async (req: Request, res: Response) => {
       where: { id },
       data: {
         ...(key && { key }),
+        ...(name && { name }),
         ...(description && { description }),
       },
       include: {
@@ -296,7 +355,10 @@ export const deletePermission = async (req: Request, res: Response) => {
       where: { id },
     });
 
-    res.status(204).send();
+    res.status(200).json({
+      key: existingPermission.key,
+      message: `Successfully deleted '${existingPermission.key}' permission`,
+    });
   } catch (error) {
     console.error("Error deleting permission:", error);
     res.status(500).json({ error: "Failed to delete permission" });

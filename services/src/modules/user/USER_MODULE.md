@@ -13,10 +13,12 @@ The User Module is a comprehensive authentication and authorization system for t
     - [Role Table](#role-table)
     - [Permission Table](#permission-table)
     - [RolePermission Table (Junction)](#rolepermission-table-junction)
+    - [PDAccount Table](#pdaccount-table)
+    - [Lounge Table](#lounge-table)
   - [API Endpoints](#api-endpoints)
     - [Permission Management](#permission-management)
-    - [User Management](#user-management)
     - [Role Management](#role-management)
+    - [User Management](#user-management)
   - [Models](#models)
     - [User Model](#user-model)
     - [Role Model](#role-model)
@@ -24,17 +26,17 @@ The User Module is a comprehensive authentication and authorization system for t
   - [Controllers](#controllers)
     - [Permission Controller](#permission-controller)
       - [Get Permissions](#get-permissions)
-      - [Get Permission by ID](#get-permission-by-id)
       - [Create Permission](#create-permission)
-      - [Update Permission](#update-permission)
-      - [Delete Permission](#delete-permission)
-      - [Get Permissions by Category](#get-permissions-by-category)
-      - [Get Permission Stats](#get-permission-stats)
+    - [Role Controller](#role-controller)
+      - [Get Roles](#get-roles)
+      - [Create Role](#create-role)
+      - [Assign Permission to Role](#assign-permission-to-role)
     - [User Controller](#user-controller)
   - [Services](#services)
     - [User Service](#user-service)
   - [Routes](#routes)
     - [Permission Routes](#permission-routes)
+    - [Role Routes](#role-routes)
     - [User Routes](#user-routes)
   - [Usage Examples](#usage-examples)
     - [Creating a Permission](#creating-a-permission)
@@ -53,9 +55,10 @@ The User Module provides:
 - **User Management**: Create, read, update, and delete users
 - **Role-Based Access Control (RBAC)**: Flexible permission system with roles
 - **Permission Management**: Granular permissions for different system operations
-- **Multi-tenancy**: Users are scoped to specific lounges
+- **Multi-tenancy**: Users are scoped to specific accounts with lounge-specific permissions
 - **User Status Management**: Active, suspended, and deleted user states
 - **Authentication Support**: Password-based authentication with secure storage
+- **Account-based Organization**: Users belong to accounts which can own multiple lounges
 
 ## Architecture
 
@@ -67,7 +70,7 @@ The module follows a layered architecture:
 ├─────────────────┤
 │   Controllers   │  ← Request handling & validation
 ├─────────────────┤
-│    Services     │  ← Business logic
+│    Services     │  ← Business logic (planned)
 ├─────────────────┤
 │     Models      │  ← Data models & transformations
 ├─────────────────┤
@@ -80,31 +83,58 @@ The module follows a layered architecture:
 ### User Table
 
 - **id**: Unique identifier (CUID)
-- **username**: User's login name (unique per lounge)
+- **username**: User's login name (unique per account)
 - **password**: Hashed password
 - **email**: Optional email address (globally unique)
 - **status**: User status (ACTIVE, SUSPENDED, DELETED)
-- **loungeId**: Reference to the user's lounge
+- **pdAccountId**: Reference to the user's account
 - **roleId**: Reference to the user's role
 - **createdAt/updatedAt**: Timestamps
 
 ### Role Table
 
 - **id**: Unique identifier (CUID)
-- **name**: Role name (unique per lounge)
+- **name**: Role name (unique per account)
 - **isDefault**: Whether this is a default system role
-- **loungeId**: Reference to the lounge
+- **accountId**: Reference to the account that owns this role
+- **createdAt/updatedAt**: Timestamps
 
 ### Permission Table
 
 - **id**: Unique identifier (CUID)
 - **key**: Permission key (globally unique, e.g., "user.create")
-- **description**: Human-readable description
+- **name**: Human-readable name for the permission
+- **description**: Detailed description of what the permission allows
+- **createdAt/updatedAt**: Timestamps
 
 ### RolePermission Table (Junction)
 
 - **roleId**: Reference to role
 - **permissionId**: Reference to permission
+- **loungeId**: Reference to lounge (permissions are lounge-specific)
+- **createdAt/updatedAt**: Timestamps
+- **Composite Primary Key**: [roleId, permissionId, loungeId]
+
+### PDAccount Table
+
+- **id**: Unique identifier (UUID)
+- **name**: Business or organization name
+- **email**: Contact email (globally unique)
+- **phone**: Contact phone number
+- **status**: Account status (ACTIVE, SUSPENDED, TRIALING)
+- **logoUrl**: Optional logo image URL
+- **createdAt/updatedAt**: Timestamps
+
+### Lounge Table
+
+- **id**: Unique identifier (UUID)
+- **pdAccountId**: Reference to the owning account
+- **name**: Lounge name
+- **location**: Physical location (optional)
+- **latitude/longitude**: GPS coordinates (optional)
+- **logoUrl**: Lounge logo (optional)
+- **status**: Lounge status (ACTIVE, CLOSED, PENDING_APPROVAL)
+- **createdAt/updatedAt**: Timestamps
 
 ## API Endpoints
 
@@ -120,6 +150,20 @@ The module follows a layered architecture:
 | PUT    | `/api/permissions/:id`        | [Update permission](#update-permission)                               |
 | DELETE | `/api/permissions/:id`        | [Delete permission](#delete-permission)                               |
 
+### Role Management
+
+| Method | Endpoint                                                 | Description                                                 |
+| ------ | -------------------------------------------------------- | ----------------------------------------------------------- |
+| GET    | `/api/roles`                                             | [Get all roles with filtering and pagination](#get-roles)   |
+| GET    | `/api/roles/stats`                                       | [Get role statistics](#get-role-stats)                      |
+| GET    | `/api/roles/account/:accountId`                          | [Get roles by account](#get-roles-by-account)               |
+| GET    | `/api/roles/:id`                                         | [Get role by ID](#get-role-by-id)                           |
+| POST   | `/api/roles`                                             | [Create new role](#create-role)                             |
+| PUT    | `/api/roles/:id`                                         | [Update role](#update-role)                                 |
+| DELETE | `/api/roles/:id`                                         | [Delete role](#delete-role)                                 |
+| POST   | `/api/roles/permissions`                                 | [Assign permission to role](#assign-permission-to-role)     |
+| DELETE | `/api/roles/:roleId/permissions/:permissionId/:loungeId` | [Remove permission from role](#remove-permission-from-role) |
+
 ### User Management
 
 _Note: User endpoints are currently under development_
@@ -133,20 +177,6 @@ _Note: User endpoints are currently under development_
 | DELETE | `/api/users/:id`   | Delete user                  |
 | POST   | `/api/users/login` | User authentication          |
 
-### Role Management
-
-| Method | Endpoint                                       | Description                                                 |
-| ------ | ---------------------------------------------- | ----------------------------------------------------------- |
-| GET    | `/api/roles`                                   | [Get all roles with filtering and pagination](#get-roles)   |
-| GET    | `/api/roles/stats`                             | [Get role statistics](#get-role-stats)                      |
-| GET    | `/api/roles/lounge/:loungeId`                  | [Get roles by lounge](#get-roles-by-lounge)                 |
-| GET    | `/api/roles/:id`                               | [Get role by ID](#get-role-by-id)                           |
-| POST   | `/api/roles`                                   | [Create new role](#create-role)                             |
-| PUT    | `/api/roles/:id`                               | [Update role](#update-role)                                 |
-| DELETE | `/api/roles/:id`                               | [Delete role](#delete-role)                                 |
-| POST   | `/api/roles/permissions`                       | [Assign permission to role](#assign-permission-to-role)     |
-| DELETE | `/api/roles/:roleId/permissions/:permissionId` | [Remove permission from role](#remove-permission-from-role) |
-
 ## Models
 
 ### User Model
@@ -156,12 +186,14 @@ Located in `models/user.model.ts`
 **Key Interfaces:**
 
 - `UserModel`: Base user type from Prisma
-- `UserWithRelations`: User with lounge and role data
+- `UserWithRelations`: User with PDAccount and role data
 - `CreateUserInput`: Data for creating new users
 - `UpdateUserInput`: Data for updating users
 - `UserResponse`: Public user data (excludes password)
 - `UserFilters`: Query filtering options
 - `UserStats`: User statistics for dashboards
+- `LoginInput`: Authentication input
+- `ChangePasswordInput`: Password change data
 
 **Key Functions:**
 
@@ -172,7 +204,7 @@ Located in `models/user.model.ts`
 
 **Validation Rules:**
 
-- Username: 3-50 characters
+- Username: 3-50 characters, unique per account
 - Password: Minimum 8 characters
 - Email: Valid email format (optional)
 
@@ -183,20 +215,35 @@ Located in `models/role.model.ts`
 **Key Interfaces:**
 
 - `RoleModel`: Base role structure
-- `RoleWithRelations`: Role with lounge, users, and permissions
-- `CreateRoleInput`: Data for creating roles
-- `UpdateRoleInput`: Data for updating roles
+- `RoleWithRelations`: Role with account, users, and permissions including lounge data
+- `CreateRoleInput`: Data for creating roles (requires accountId and loungeId)
+- `UpdateRoleInput`: Data for updating roles (includes loungeId for permission updates)
 - `RoleResponse`: Public role data
-- `RoleFilters`: Query filtering options
+- `RoleFilters`: Query filtering options (supports both accountId and loungeId filtering)
+- `RoleStats`: Role statistics
+- `RoleAssignmentInput`: For assigning roles to users
+- `BulkRoleAssignmentInput`: For bulk role assignments
+
+**Key Enums:**
+
+- `DefaultRoleTypes`: Standard role types (ADMIN, MANAGER, EMPLOYEE, CUSTOMER, GUEST)
 
 **Key Functions:**
 
 - `roleToResponse()`: Transform role to response format
+- `rolesToResponse()`: Transform multiple roles
 - `isDefaultRole()`: Check if role is system default
 - `canDeleteRole()`: Check if role can be safely deleted
 - `roleHasPermission()`: Check if role has specific permission
 - `roleHasAnyPermission()`: Check for any of multiple permissions
 - `roleHasAllPermissions()`: Check for all specified permissions
+- `getRolePermissionKeys()`: Get all permission keys for a role
+
+**Validation Rules:**
+
+- Name: 2-50 characters, unique per account
+- Maximum 100 permissions per role
+- Reserved names: admin, super_admin, system
 
 ### Permission Model
 
@@ -206,29 +253,42 @@ Located in `models/permission.model.ts`
 
 - `PermissionModel`: Base permission type
 - `PermissionWithRelations`: Permission with role data
-- `CreatePermissionInput`: Data for creating permissions
+- `CreatePermissionInput`: Data for creating permissions (includes name, key, description)
 - `UpdatePermissionInput`: Data for updating permissions
-- `PermissionResponse`: Public permission data
-
-**Key Enums:**
-
-- `PermissionCategories`: Standard permission categories (user, lounge, role, etc.)
-- `PermissionActions`: Common actions (create, read, update, delete, manage)
-- `DefaultPermissions`: Pre-defined system permissions
+- `PermissionResponse`: Public permission data (includes name field)
+- `PermissionFilters`: Query filtering options
+- `PermissionPaginationOptions`: Pagination settings
 
 **Key Functions:**
 
 - `permissionToResponse()`: Transform permission to response format
+- `permissionsToResponse()`: Transform multiple permissions
 - `isValidPermissionKey()`: Validate permission key format
-- `getPermissionCategory()`: Extract category from permission key
-- `groupPermissionsByCategory()`: Group permissions by domain
-- `permissionAllowsAction()`: Check if permission grants access to action
+- `getPermissionCategory()`: Extract category from permission key (planned)
+- `groupPermissionsByCategory()`: Group permissions by domain (planned)
+
+**Validation Rules:**
+
+- Key: 3-100 characters, follows pattern `category.action`
+- Name: 3-50 characters, human-readable
+- Description: 5-255 characters
+- Key must be globally unique
 
 ## Controllers
 
 ### Permission Controller
 
 Located in `controllers/permission.controller.ts`
+
+**Available Functions:**
+
+- `getPermissions`: Get all permissions with filtering, search, and pagination
+- `getPermissionById`: Get single permission by ID with role assignments
+- `createPermission`: Create new permission with validation
+- `updatePermission`: Update existing permission
+- `deletePermission`: Delete permission (restricted if in use)
+- `getPermissionsByCategory`: Get permissions grouped by category
+- `getPermissionStats`: Get permission statistics
 
 #### Get Permissions
 
@@ -238,7 +298,7 @@ GET /api/permissions?search=user&category=user&page=1&limit=10
 
 **Query Parameters:**
 
-- `search`: Search in key/description
+- `search`: Search in key/name/description
 - `roleId`: Filter by role
 - `category`: Filter by permission category
 - `page`: Page number (default: 1)
@@ -254,7 +314,8 @@ GET /api/permissions?search=user&category=user&page=1&limit=10
     {
       "id": "perm123",
       "key": "user.create",
-      "description": "Create new users",
+      "name": "Create Users",
+      "description": "Allows creating new users",
       "roleCount": 2
     }
   ],
@@ -267,14 +328,6 @@ GET /api/permissions?search=user&category=user&page=1&limit=10
 }
 ```
 
-#### Get Permission by ID
-
-```typescript
-GET /api/permissions/:id
-```
-
-Returns single permission with role assignments.
-
 #### Create Permission
 
 ```typescript
@@ -286,7 +339,8 @@ POST / api / permissions;
 ```json
 {
   "key": "user.create",
-  "description": "Allows creating new users"
+  "name": "Create Users",
+  "description": "Allows creating new users in the system"
 }
 ```
 
@@ -294,79 +348,35 @@ POST / api / permissions;
 
 - Key must follow pattern: `category.action` (e.g., "user.create")
 - Key must be unique
+- Name: 3-50 characters
 - Description: 5-255 characters
-
-#### Update Permission
-
-```typescript
-PUT /api/permissions/:id
-```
-
-**Request Body:**
-
-```json
-{
-  "key": "user.update",
-  "description": "Updated description"
-}
-```
-
-#### Delete Permission
-
-```typescript
-DELETE /api/permissions/:id
-```
-
-**Restrictions:**
-
-- Cannot delete permissions assigned to roles
-- Returns 409 if permission is in use
-
-#### Get Permissions by Category
-
-```typescript
-GET / api / permissions / categories;
-```
-
-Returns permissions grouped by category (user, lounge, role, etc.).
-
-#### Get Permission Stats
-
-```typescript
-GET / api / permissions / stats;
-```
-
-**Response:**
-
-```json
-{
-  "total": 25,
-  "mostUsedPermission": {
-    "id": "perm123",
-    "key": "user.read",
-    "roleCount": 5
-  },
-  "leastUsedPermission": {
-    "id": "perm456",
-    "key": "system.admin",
-    "roleCount": 1
-  }
-}
-```
 
 ### Role Controller
 
 Located in `controllers/role.controller.ts`
 
+**Available Functions:**
+
+- `getRoles`: Get all roles with filtering and pagination
+- `getRoleById`: Get single role by ID with full relations
+- `createRole`: Create new role with permissions
+- `updateRole`: Update role and permissions
+- `deleteRole`: Delete role (with restrictions)
+- `getRolesByAccount`: Get all roles for an account
+- `getRoleStats`: Get role statistics
+- `assignPermissionToRole`: Assign permission to role for specific lounge
+- `removePermissionFromRole`: Remove permission from role for specific lounge
+
 #### Get Roles
 
 ```typescript
-GET /api/roles?loungeId=lounge123&search=admin&page=1&limit=10
+GET /api/roles?accountId=acc123&loungeId=lounge456&search=manager&page=1&limit=10
 ```
 
 **Query Parameters:**
 
-- `loungeId`: Filter by lounge
+- `accountId`: Filter by account
+- `loungeId`: Filter by lounge (through role permissions)
 - `isDefault`: Filter by default roles (true/false)
 - `search`: Search in role name
 - `hasPermission`: Filter by permission key
@@ -384,11 +394,12 @@ GET /api/roles?loungeId=lounge123&search=admin&page=1&limit=10
       "id": "role123",
       "name": "Manager",
       "isDefault": false,
-      "loungeId": "lounge123",
+      "accountId": "acc123",
       "permissions": [
         {
           "id": "perm123",
           "key": "user.read",
+          "name": "Read Users",
           "description": "Read user data"
         }
       ],
@@ -404,14 +415,6 @@ GET /api/roles?loungeId=lounge123&search=admin&page=1&limit=10
 }
 ```
 
-#### Get Role by ID
-
-```typescript
-GET /api/roles/:id
-```
-
-Returns single role with permissions and user count.
-
 #### Create Role
 
 ```typescript
@@ -423,7 +426,8 @@ POST / api / roles;
 ```json
 {
   "name": "Manager",
-  "loungeId": "lounge123",
+  "accountId": "acc123",
+  "loungeId": "lounge456",
   "isDefault": false,
   "permissionIds": ["perm123", "perm456"]
 }
@@ -431,67 +435,11 @@ POST / api / roles;
 
 **Validation:**
 
-- Name: 2-50 characters, unique per lounge
+- Name: 2-50 characters, unique per account
 - Cannot use reserved names: admin, super_admin, system
 - Maximum 100 permissions per role
-- Lounge must exist
-
-#### Update Role
-
-```typescript
-PUT /api/roles/:id
-```
-
-**Request Body:**
-
-```json
-{
-  "name": "Senior Manager",
-  "isDefault": false,
-  "permissionIds": ["perm123", "perm456", "perm789"]
-}
-```
-
-#### Delete Role
-
-```typescript
-DELETE /api/roles/:id
-```
-
-**Restrictions:**
-
-- Cannot delete default roles
-- Cannot delete roles with assigned users
-- Returns 409 if role cannot be deleted
-
-#### Get Roles by Lounge
-
-```typescript
-GET /api/roles/lounge/:loungeId
-```
-
-Returns all roles for a specific lounge, ordered by name.
-
-#### Get Role Stats
-
-```typescript
-GET /api/roles/stats?loungeId=lounge123
-```
-
-**Response:**
-
-```json
-{
-  "total": 8,
-  "defaultRoles": 3,
-  "customRoles": 5,
-  "mostUsedRole": {
-    "id": "role123",
-    "name": "Employee",
-    "userCount": 15
-  }
-}
-```
+- Account and lounge must exist
+- All permission IDs must be valid
 
 #### Assign Permission to Role
 
@@ -504,17 +452,12 @@ POST / api / roles / permissions;
 ```json
 {
   "roleId": "role123",
-  "permissionId": "perm456"
+  "permissionId": "perm456",
+  "loungeId": "lounge789"
 }
 ```
 
-#### Remove Permission from Role
-
-```typescript
-DELETE /api/roles/:roleId/permissions/:permissionId
-```
-
-Removes specific permission assignment from role.
+**Note**: Permissions are assigned per lounge, allowing the same role to have different permissions in different lounges.
 
 ### User Controller
 
@@ -522,7 +465,7 @@ _Currently under development_
 
 Located in `controllers/user.controller.ts`
 
-Will include functions for:
+**Planned Functions:**
 
 - User registration and authentication
 - Profile management

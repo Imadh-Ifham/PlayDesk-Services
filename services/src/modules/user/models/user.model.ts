@@ -1,4 +1,9 @@
-import { User, UserStatus, Lounge, Role } from "../../../../generated/prisma";
+import {
+  User,
+  UserStatus,
+  PDAccount,
+  Role,
+} from "../../../../generated/prisma";
 
 // Re-export the Prisma-generated User type
 export type UserModel = User;
@@ -8,8 +13,14 @@ export { UserStatus };
 
 // User with relations
 export interface UserWithRelations extends User {
-  lounge: Lounge;
-  role: Role;
+  pdAccount: {
+    id: string;
+    name: string;
+  };
+  role: {
+    id: string;
+    name: string;
+  };
 }
 
 // Create user input (for registration/creation)
@@ -17,7 +28,7 @@ export interface CreateUserInput {
   username: string;
   password: string;
   email?: string;
-  loungeId: string;
+  pdAccountId: string;
   roleId: string;
   status?: UserStatus;
 }
@@ -39,9 +50,9 @@ export interface UserResponse {
   status: UserStatus;
   createdAt: Date;
   updatedAt: Date;
-  loungeId: string;
+  pdAccountId: string;
   roleId: string;
-  lounge?: {
+  pdAccount?: {
     id: string;
     name: string;
   };
@@ -55,13 +66,13 @@ export interface UserResponse {
 export interface LoginInput {
   username: string;
   password: string;
-  loungeId?: string; // Optional for global username lookup
+  pdAccountId: string; // Required for username uniqueness per account
 }
 
 // User query filters
 export interface UserFilters {
   status?: UserStatus;
-  loungeId?: string;
+  pdAccountId?: string;
   roleId?: string;
   search?: string; // For username/email search
 }
@@ -107,11 +118,11 @@ export function userToResponse(user: UserWithRelations): UserResponse {
     status: user.status,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-    loungeId: user.loungeId,
+    pdAccountId: user.pdAccountId,
     roleId: user.roleId,
-    lounge: {
-      id: user.lounge.id,
-      name: user.lounge.name,
+    pdAccount: {
+      id: user.pdAccount.id,
+      name: user.pdAccount.name,
     },
     role: {
       id: user.role.id,

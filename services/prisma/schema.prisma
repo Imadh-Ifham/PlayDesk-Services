@@ -25,6 +25,12 @@ enum LoungeStatus {
 }
 
 
+enum RoleType {
+  SYSTEM   // Developer/internal use only
+  GLOBAL   // Predefined global roles (e.g., Owner, Admin)
+  ACCOUNT  // Account-specific roles
+}
+
 enum UserStatus {
   ACTIVE
   SUSPENDED
@@ -45,6 +51,8 @@ model PDAccount {
 
   // Relations
   lounges    Lounge[]                                       // One PDAccount can own many Lounges
+  users      User[]                                         // One PDAccount can have many Users
+  roles      Role[]                                         // One PDAccount can have many Roles
 
   @@map("pd_accounts")                                      // Maps to the table name `pd_accounts`
 }
@@ -66,6 +74,7 @@ model Lounge {
   updatedAt       DateTime       @updatedAt     @map("updated_at")   // Last update timestamp
 
   loungeServices  LoungeService[]  // Relation to lounges
+  rolePermissions RolePermission[] // Relation to role permissions
 
   @@map("lounges")                                                  // Maps to SQL table `lounges`
 }
@@ -86,34 +95,49 @@ model LoungeService {
 
 
 model Permission {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   key         String   @unique
+  name        String   // Human readable name for the permission
   description String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   roles       RolePermission[]
+
+  @@map("permissions")
 }
 
 model RolePermission {
-  roleId       String
-  permissionId String
+  roleId       String     @map("role_id")
+  permissionId String     @map("permission_id")
+  loungeId     String?     @map("lounge_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  role         Role       @relation(fields: [roleId], references: [id])
-  permission   Permission @relation(fields: [permissionId], references: [id])
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  lounge       Lounge?     @relation(fields: [loungeId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
+  @@map("role_permissions")
 }
 
 
 model Role {
-  id        String   @id @default(cuid())
+  id        String     @id @default(uuid())
   name      String
-  isDefault Boolean  @default(false)
-  loungeId  String
+  roleType  RoleType   @default(ACCOUNT) @map("role_type")
+  accountId String?    @map("account_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
 
-  users     User[]
+  // Relations
+  account     PDAccount?       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   permissions RolePermission[]
+  users       User[]
 
-  @@unique([name, loungeId])
+  @@unique([name, accountId])
+  @@map("roles")
 }
 
 
@@ -135,19 +159,20 @@ model Service {
 
 
 model User {
-  id        String     @id @default(cuid())
-  username  String
-  password  String
-  email     String?    @unique
-  status    UserStatus @default(ACTIVE)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id          String     @id @default(uuid())
+  username    String
+  password    String
+  email       String?    @unique
+  status      UserStatus @default(ACTIVE)
+  pdAccountId String     @map("pd_account_id")
+  roleId      String     @map("role_id")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
 
-  loungeId  String
-  roleId    String
+  // Relations
+  pdAccount   PDAccount  @relation(fields: [pdAccountId], references: [id], onDelete: Cascade)
+  role        Role       @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
-  role      Role       @relation(fields: [roleId], references: [id])
-
-  @@unique([username, loungeId])
+  @@unique([username, pdAccountId])
   @@map("users")
 }
