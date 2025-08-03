@@ -14,6 +14,7 @@ import {
   isPermissionActionValid,
   PermissionCategories,
   PermissionActions,
+  createPermissionKey,
 } from "../models/permission.model";
 
 // Get all permissions with optional filtering and pagination
@@ -121,14 +122,33 @@ export const getPermissionById = async (req: Request, res: Response) => {
 // Create new permission
 export const createPermission = async (req: Request, res: Response) => {
   try {
-    const { key, name, description }: CreatePermissionInput = req.body;
+    const { category, action, name, description }: CreatePermissionInput =
+      req.body;
 
     // Validate input
-    if (!key || !name || !description) {
+    if (!category || !action || !name || !description) {
       return res.status(400).json({
-        error: "Key, name, and description are required",
+        error: "Category, action, name, and description are required",
       });
     }
+
+    if (!isPermissionCategoryValid(category)) {
+      return res.status(400).json({
+        error: `Invalid permission category. It should be one of: ${Object.values(
+          PermissionCategories
+        ).join(", ")}`,
+      });
+    }
+
+    if (!isPermissionActionValid(action)) {
+      return res.status(400).json({
+        error: `Invalid permission action. It should be one of: ${Object.values(
+          PermissionActions
+        ).join(", ")}`,
+      });
+    }
+
+    const key = createPermissionKey(category, action);
 
     if (
       key.length < PermissionValidation.KEY_MIN_LENGTH ||
@@ -161,22 +181,6 @@ export const createPermission = async (req: Request, res: Response) => {
       return res.status(400).json({
         error:
           "Invalid permission key format. Use lowercase letters, numbers, and dots (e.g., user.create)",
-      });
-    }
-
-    if (!isPermissionCategoryValid(key)) {
-      return res.status(400).json({
-        error: `Invalid permission category. It should be one of: ${Object.values(
-          PermissionCategories
-        ).join(", ")}`,
-      });
-    }
-
-    if (!isPermissionActionValid(key)) {
-      return res.status(400).json({
-        error: `Invalid permission action. It should be one of: ${Object.values(
-          PermissionActions
-        ).join(", ")}`,
       });
     }
 

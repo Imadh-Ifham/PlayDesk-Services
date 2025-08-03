@@ -15,7 +15,8 @@ export interface PermissionWithRoles extends Permission {
 
 // Create permission input
 export interface CreatePermissionInput {
-  key: string;
+  category: string;
+  action: string;
   name: string;
   description: string;
 }
@@ -200,16 +201,14 @@ export function getPermissionAction(key: string): string {
 }
 
 // Helper function to check if permission key Category is valid
-export function isPermissionCategoryValid(key: string): boolean {
-  const category = getPermissionCategory(key);
+export function isPermissionCategoryValid(category: string): boolean {
   return Object.values(PermissionCategories).includes(
     category as PermissionCategories
   );
 }
 
 // Helper function to check if permission action is valid
-export function isPermissionActionValid(key: string): boolean {
-  const action = getPermissionAction(key);
+export function isPermissionActionValid(action: string): boolean {
   return Object.values(PermissionActions).includes(action as PermissionActions);
 }
 
