@@ -75,6 +75,8 @@ model Lounge {
 
   loungeServices  LoungeService[]  // Relation to lounges
   rolePermissions RolePermission[] // Relation to role permissions
+  machine         Machine[]        // Relation to machines
+  machineType     MachineType[]    // Relation to machine types
 
   @@map("lounges")                                                  // Maps to SQL table `lounges`
 }
@@ -91,6 +93,67 @@ model LoungeService {
 
   @@id([loungeId, serviceId])                                         // Composite primary key
   @@map("lounge_services")                                            // Maps to SQL table `lounge_services`
+}
+
+
+// Machine Type model for gaming machines
+model MachineType {
+  id              String          @id @default(uuid())
+  name            String                                    // Type name (e.g., "PS5", "Gaming PC")
+  specifications  String?                                   // Technical specifications
+  description     String?                                   // Optional description
+  imageUrl        String?   @map("image_url")              // Optional image URL
+  loungeId        String    @map("lounge_id")             // Reference to lounge
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  machines        Machine[]
+  lounge          Lounge    @relation(fields: [loungeId], references: [id])
+  rateByPlayers   RateByPlayers[]
+
+  @@map("machine_types")
+}
+
+model RateByPlayers {
+  id            String      @id @default(uuid())
+  noOfPlayers   Int
+  price         Int
+  machineTypeId String
+  machineType   MachineType @relation(fields: [machineTypeId], references: [id])
+
+  @@map("rate_by_players")
+}
+
+// Machine Category enum
+enum MachineCategory {
+  Console
+  PC_L
+  PC_R
+}
+
+// Machine Status enum
+enum MachineStatus {
+  online
+  offline
+}
+
+// Machine model
+model Machine {
+  id            String          @id @default(uuid())
+  machineTypeId String          @map("machine_type_id")
+  category      MachineCategory
+  serialNumber  String          @unique @map("serial_number")
+  status        MachineStatus   @default(online)
+  loungeId      String          @map("lounge_id")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  machineType   MachineType     @relation(fields: [machineTypeId], references: [id])
+  lounge        Lounge          @relation(fields: [loungeId], references: [id])
+
+  @@map("machines")
 }
 
 
