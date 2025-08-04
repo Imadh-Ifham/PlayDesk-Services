@@ -1,6 +1,6 @@
 // Prisma MachineType model interface for service layer
-import { IMachine } from './machine.model';
-import { IRateByPlayers } from './rateByPlayers.model';
+import { IMachine } from "./machine.model";
+import { IRateByPlayers } from "./rateByPlayers.model";
 
 export interface IMachineType {
   id: string;
@@ -32,7 +32,9 @@ export type CreateMachineTypeInput = {
 };
 
 // Type for updating a machine type
-export type UpdateMachineTypeInput = Partial<Omit<CreateMachineTypeInput, 'loungeId'>>;
+export type UpdateMachineTypeInput = Partial<
+  Omit<CreateMachineTypeInput, "loungeId">
+>;
 
 // Standard include object for Prisma queries
 export const machineTypeInclude = {
