@@ -25,10 +25,10 @@ export const getPermissions = async (req: Request, res: Response) => {
 /**
  * Get permission by ID
  */
-export const getPermissionById = async (req: Request, res: Response) => {
+export const getPermissionByKey = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const permission = await PermissionService.findById(id);
+    const { key } = req.params;
+    const permission = await PermissionService.findByKey(key);
     res.json(permission);
   } catch (error) {
     console.error("Error fetching permission:", error);
@@ -82,10 +82,10 @@ export const createPermission = async (req: Request, res: Response) => {
  */
 export const updatePermission = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { key } = req.params;
     const updateData: UpdatePermissionInput = req.body;
 
-    const permission = await PermissionService.update(id, updateData);
+    const permission = await PermissionService.update(key, updateData);
     res.json(permission);
   } catch (error) {
     console.error("Error updating permission:", error);
@@ -117,8 +117,8 @@ export const updatePermission = async (req: Request, res: Response) => {
  */
 export const deletePermission = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const result = await PermissionService.delete(id);
+    const { key } = req.params;
+    const result = await PermissionService.delete(key);
     res.status(200).json(result);
   } catch (error) {
     console.error("Error deleting permission:", error);

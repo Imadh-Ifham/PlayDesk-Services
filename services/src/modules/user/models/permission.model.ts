@@ -23,14 +23,12 @@ export interface CreatePermissionInput {
 
 // Update permission input
 export interface UpdatePermissionInput {
-  key?: string;
   name?: string;
   description?: string;
 }
 
 // Permission response (public data)
 export interface PermissionResponse {
-  id: string;
   key: string;
   name: string;
   description: string;
@@ -56,7 +54,6 @@ export interface PermissionPaginationOptions {
 export interface PermissionStats {
   total: number;
   mostUsedPermission: {
-    id: string;
     key: string;
     roleCount: number;
   } | null;
@@ -162,7 +159,6 @@ export function permissionToResponse(
   permission: PermissionWithRelations
 ): PermissionResponse {
   return {
-    id: permission.id,
     key: permission.key,
     name: permission.name,
     description: permission.description,

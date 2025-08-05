@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   getPermissions,
-  getPermissionById,
+  getPermissionByKey,
   createPermission,
   updatePermission,
   deletePermission,
@@ -30,16 +30,16 @@ router.get("/categories", getPermissionsByCategory);
 // GET /api/permissions/category-stats - Get category statistics
 router.get("/category-stats", getCategoryStats);
 
-// GET /api/permissions/:id - Get permission by ID
-router.get("/:id", getPermissionById);
+// GET /api/permissions/:key - Get permission by key
+router.get("/:key", getPermissionByKey);
 
 // POST /api/permissions - Create new permission
 router.post("/", createPermission);
 
-// PUT /api/permissions/:id - Update permission
-router.put("/:id", updatePermission);
+// PUT /api/permissions/:key - Update permission
+router.put("/:key", updatePermission);
 
-// DELETE /api/permissions/:id - Delete permission
-router.delete("/:id", deletePermission);
+// DELETE /api/permissions/:key - Delete permission
+router.delete("/:key", deletePermission);
 
 export default router;

@@ -80,54 +80,8 @@ export class PermissionValidationService {
   }
 
   // Validate update permission input
-  static async validateUpdateInput(id: string, input: UpdatePermissionInput) {
-    const { key, name, description } = input;
-
-    // Validate key if provided
-    if (key) {
-      if (
-        key.length < PermissionValidation.KEY_MIN_LENGTH ||
-        key.length > PermissionValidation.KEY_MAX_LENGTH
-      ) {
-        throw new Error(
-          `Key must be between ${PermissionValidation.KEY_MIN_LENGTH} and ${PermissionValidation.KEY_MAX_LENGTH} characters`
-        );
-      }
-
-      if (!isValidPermissionKeyFormat(key)) {
-        throw new Error(
-          "Invalid permission key format. Use lowercase letters, numbers, and dots (e.g., user.create)"
-        );
-      }
-
-      // Extract category and action from key for validation
-      const [category, action] = key.split(".");
-
-      if (!isPermissionCategoryValid(category)) {
-        throw new Error(
-          `Invalid permission category. It should be one of: ${Object.values(
-            PermissionCategories
-          ).join(", ")}`
-        );
-      }
-
-      if (!isPermissionActionValid(action)) {
-        throw new Error(
-          `Invalid permission action. It should be one of: ${Object.values(
-            PermissionActions
-          ).join(", ")}`
-        );
-      }
-
-      // Check if key already exists (excluding current permission)
-      const duplicatePermission = await prisma.permission.findUnique({
-        where: { key },
-      });
-
-      if (duplicatePermission && duplicatePermission.id !== id) {
-        throw new Error("Permission with this key already exists");
-      }
-    }
+  static async validateUpdateInput(input: UpdatePermissionInput) {
+    const { name, description } = input;
 
     // Validate name if provided
     if (name) {

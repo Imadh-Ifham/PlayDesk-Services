@@ -25,13 +25,11 @@ export class PermissionQueryService {
       );
 
       mostUsed = {
-        id: sorted[0].id,
         key: sorted[0].key,
         roleCount: sorted[0]._count.roles,
       };
 
       leastUsed = {
-        id: sorted[sorted.length - 1].id,
         key: sorted[sorted.length - 1].key,
         roleCount: sorted[sorted.length - 1]._count.roles,
       };

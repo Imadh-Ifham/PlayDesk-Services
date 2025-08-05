@@ -82,10 +82,10 @@ export class PermissionService {
     };
   }
 
-  // Find permission by ID
-  static async findById(id: string) {
+  // Find permission by key
+  static async findByKey(key: string) {
     const permission = await prisma.permission.findUnique({
-      where: { id },
+      where: { key },
       include: {
         roles: {
           include: {
@@ -132,12 +132,12 @@ export class PermissionService {
   }
 
   // Update permission
-  static async update(id: string, input: UpdatePermissionInput) {
-    const { key, name, description } = input;
+  static async update(key: string, input: UpdatePermissionInput) {
+    const { name, description } = input;
 
     // Check if permission exists
     const existingPermission = await prisma.permission.findUnique({
-      where: { id },
+      where: { key },
     });
 
     if (!existingPermission) {
@@ -145,13 +145,12 @@ export class PermissionService {
     }
 
     // Validate update input
-    await PermissionValidationService.validateUpdateInput(id, input);
+    await PermissionValidationService.validateUpdateInput(input);
 
     // Update permission
     const permission = await prisma.permission.update({
-      where: { id },
+      where: { key },
       data: {
-        ...(key && { key }),
         ...(name && { name }),
         ...(description && { description }),
       },
@@ -168,10 +167,10 @@ export class PermissionService {
   }
 
   // Delete permission
-  static async delete(id: string) {
+  static async delete(key: string) {
     // Check if permission exists and get role assignments
     const existingPermission = await prisma.permission.findUnique({
-      where: { id },
+      where: { key },
       include: {
         roles: true,
       },
@@ -190,7 +189,7 @@ export class PermissionService {
 
     // Delete permission
     await prisma.permission.delete({
-      where: { id },
+      where: { key },
     });
 
     return {
