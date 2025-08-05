@@ -187,44 +187,7 @@ export interface MachineStats {
   utilizationRate: number; // percentage of online machines
 }
 
-// Machine grouping functions
-export const groupMachinesByCategory = (
-  machines: Machine[]
-): Record<MachineCategory, Machine[]> => {
-  const grouped = {
-    [MachineCategory.Console]: [],
-    [MachineCategory.PC_L]: [],
-    [MachineCategory.PC_R]: [],
-  } as Record<MachineCategory, Machine[]>;
-
-  machines.forEach((machine) => {
-    grouped[machine.category].push(machine);
-  });
-
-  return grouped;
-};
-
-export const groupMachinesByStatus = (
-  machines: Machine[]
-): Record<MachineStatus, Machine[]> => {
-  const grouped = {
-    [MachineStatus.online]: [],
-    [MachineStatus.offline]: [],
-  } as Record<MachineStatus, Machine[]>;
-
-  machines.forEach((machine) => {
-    grouped[machine.status].push(machine);
-  });
-
-  return grouped;
-};
-
-// Machine availability checker
-export const isAvailableMachine = (machine: Machine): boolean => {
-  return machine.status === MachineStatus.online;
-};
-
-// Machine category display helpers
+// Display helpers
 export const getCategoryDisplayName = (category: MachineCategory): string => {
   const displayNames = {
     [MachineCategory.Console]: "Gaming Console",
@@ -234,7 +197,6 @@ export const getCategoryDisplayName = (category: MachineCategory): string => {
   return displayNames[category];
 };
 
-// Machine status display helpers
 export const getStatusDisplayName = (status: MachineStatus): string => {
   const displayNames = {
     [MachineStatus.online]: "Online",
@@ -243,7 +205,7 @@ export const getStatusDisplayName = (status: MachineStatus): string => {
   return displayNames[status];
 };
 
-// Machine search helper
+// Search query helper
 export const createMachineSearchQuery = (search: string) => {
   return {
     OR: [
@@ -258,69 +220,6 @@ export const createMachineSearchQuery = (search: string) => {
   };
 };
 
-// Serial number generator helper
-export const generateSerialNumber = (
-  category: MachineCategory,
-  index: number
-): string => {
-  const categoryPrefixes = {
-    [MachineCategory.Console]: "CON",
-    [MachineCategory.PC_L]: "PCL",
-    [MachineCategory.PC_R]: "PCR",
-  };
-
-  return `${categoryPrefixes[category]}-${String(index).padStart(3, "0")}`;
-};
-
-// Machine availability helpers
-export const getAvailableMachines = (machines: Machine[]): Machine[] => {
-  return machines.filter(isAvailableMachine);
-};
-
-export const getOfflineMachines = (machines: Machine[]): Machine[] => {
-  return machines.filter((machine) => machine.status === MachineStatus.offline);
-};
-
-// Machine count helpers
-export const countMachinesByCategory = (
-  machines: Machine[]
-): Record<MachineCategory, number> => {
-  return {
-    [MachineCategory.Console]: machines.filter(
-      (m) => m.category === MachineCategory.Console
-    ).length,
-    [MachineCategory.PC_L]: machines.filter(
-      (m) => m.category === MachineCategory.PC_L
-    ).length,
-    [MachineCategory.PC_R]: machines.filter(
-      (m) => m.category === MachineCategory.PC_R
-    ).length,
-  };
-};
-
-export const countMachinesByStatus = (
-  machines: Machine[]
-): Record<MachineStatus, number> => {
-  return {
-    [MachineStatus.online]: machines.filter(
-      (m) => m.status === MachineStatus.online
-    ).length,
-    [MachineStatus.offline]: machines.filter(
-      (m) => m.status === MachineStatus.offline
-    ).length,
-  };
-};
-
-// Calculate utilization rate
-export const calculateUtilizationRate = (machines: Machine[]): number => {
-  if (machines.length === 0) return 0;
-  const onlineCount = machines.filter(
-    (m) => m.status === MachineStatus.online
-  ).length;
-  return Math.round((onlineCount / machines.length) * 100);
-};
-
-// Legacy type aliases for backward compatibility
 export type IMachine = Machine;
 export type MachineModel = Machine;
 export type MachineBlock = MachineCategory;

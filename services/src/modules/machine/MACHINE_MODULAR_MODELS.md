@@ -60,8 +60,11 @@ interface MachineTypeWithRelations extends MachineType
 interface CreateMachineTypeInput
 interface UpdateMachineTypeInput
 interface MachineTypeFilters
+interface MachineTypePaginationOptions
 interface MachineTypeResponse
 interface MachineTypeStats
+interface RateByPlayersInput
+interface UpdateRateByPlayersInput
 ```
 
 #### Key Utilities
@@ -80,17 +83,42 @@ interface MachineTypeStats
 - **Analytics**: Machine count per type, popularity rankings
 - **Pricing Integration**: Connected to RateByPlayers for pricing info
 
-### 💰 **rateByPlayers.model.ts Features**
+### 💰 **Rate Management Features**
 
 #### Core Interfaces
 
 ```typescript
-interface RateByPlayersWithRelations extends RateByPlayers
-interface CreateRateByPlayersInput
-interface UpdateRateByPlayersInput
-interface RateByPlayersFilters
-interface RateByPlayersResponse
-interface RateByPlayersStats
+interface RateByPlayersInput {
+  noOfPlayers: number;
+  price: number;
+  machineTypeId: string;
+}
+
+interface UpdateRateByPlayersInput {
+  noOfPlayers?: number;
+  price?: number;
+}
+```
+
+#### Rate Management Endpoints
+
+```typescript
+// Add new rate to machine type
+POST /:id/rates
+{
+  "noOfPlayers": number,
+  "price": number
+}
+
+// Update existing rate
+PUT /:machineTypeId/rates/:rateId
+{
+  "noOfPlayers?: number,
+  "price"?: number
+}
+
+// Delete rate
+DELETE /:machineTypeId/rates/:rateId
 ```
 
 #### Key Utilities

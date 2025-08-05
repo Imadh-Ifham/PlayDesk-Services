@@ -12,6 +12,18 @@ export interface MachineTypeWithRelations extends MachineType {
   rateByPlayers?: RateByPlayers[];
 }
 
+// Rate by players input types
+export interface RateByPlayersInput {
+  noOfPlayers: number;
+  price: number;
+  machineTypeId: string;
+}
+
+export interface UpdateRateByPlayersInput {
+  noOfPlayers?: number;
+  price?: number;
+}
+
 // Create machine type input type
 export interface CreateMachineTypeInput {
   name: string;

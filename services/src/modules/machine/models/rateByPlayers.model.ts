@@ -46,19 +46,8 @@ export interface RateByPlayersResponse {
     name: string;
     description?: string;
   };
-  pricePerPlayer?: number; // calculated field
+  pricePerPlayer?: number;
 }
-
-// Standard include object for Prisma queries
-export const rateByPlayersInclude = {
-  machineType: {
-    select: {
-      id: true,
-      name: true,
-      description: true,
-    },
-  },
-} as const;
 
 // Validation constants
 export const RateByPlayersValidation = {
@@ -97,7 +86,7 @@ export const isValidRateInput = (
   return true;
 };
 
-// Transform functions
+// Transform function
 export const rateByPlayersToResponse = (
   rate: RateByPlayersWithRelations
 ): RateByPlayersResponse => {
@@ -117,190 +106,6 @@ export const rateByPlayersToResponse = (
       },
     }),
   };
-};
-
-export const ratesByPlayersToResponse = (
-  rates: RateByPlayersWithRelations[]
-): RateByPlayersResponse[] => {
-  return rates.map(rateByPlayersToResponse);
-};
-
-// Rate by players statistics interface
-export interface RateByPlayersStats {
-  total: number;
-  playerCountDistribution: Record<number, number>;
-  priceRanges: {
-    min: number;
-    max: number;
-    average: number;
-    median: number;
-  };
-  averagePricePerPlayer: number;
-  mostCommonPlayerCount: number;
-  byMachineType: Record<
-    string,
-    {
-      machineTypeId: string;
-      machineTypeName: string;
-      rateCount: number;
-      averagePrice: number;
-      playerCounts: number[];
-    }
-  >;
-}
-
-// Analysis functions
-export const calculatePricePerPlayer = (rate: RateByPlayers): number => {
-  return rate.price / rate.noOfPlayers;
-};
-
-export const getAveragePrice = (rates: RateByPlayers[]): number => {
-  if (rates.length === 0) return 0;
-  const total = rates.reduce((sum, rate) => sum + rate.price, 0);
-  return Math.round((total / rates.length) * 100) / 100;
-};
-
-export const getAveragePricePerPlayer = (rates: RateByPlayers[]): number => {
-  if (rates.length === 0) return 0;
-  const total = rates.reduce(
-    (sum, rate) => sum + calculatePricePerPlayer(rate),
-    0
-  );
-  return Math.round((total / rates.length) * 100) / 100;
-};
-
-export const getPriceRange = (
-  rates: RateByPlayers[]
-): { min: number; max: number } => {
-  if (rates.length === 0) return { min: 0, max: 0 };
-  const prices = rates.map((rate) => rate.price);
-  return {
-    min: Math.min(...prices),
-    max: Math.max(...prices),
-  };
-};
-
-export const getMedianPrice = (rates: RateByPlayers[]): number => {
-  if (rates.length === 0) return 0;
-  const sortedPrices = rates.map((rate) => rate.price).sort((a, b) => a - b);
-  const mid = Math.floor(sortedPrices.length / 2);
-
-  if (sortedPrices.length % 2 === 0) {
-    return (sortedPrices[mid - 1] + sortedPrices[mid]) / 2;
-  }
-  return sortedPrices[mid];
-};
-
-// Grouping functions
-export const groupRatesByPlayerCount = (
-  rates: RateByPlayers[]
-): Record<number, RateByPlayers[]> => {
-  const grouped: Record<number, RateByPlayers[]> = {};
-
-  rates.forEach((rate) => {
-    if (!grouped[rate.noOfPlayers]) {
-      grouped[rate.noOfPlayers] = [];
-    }
-    grouped[rate.noOfPlayers].push(rate);
-  });
-
-  return grouped;
-};
-
-export const groupRatesByMachineType = (
-  rates: RateByPlayersWithRelations[]
-): Record<string, RateByPlayersWithRelations[]> => {
-  const grouped: Record<string, RateByPlayersWithRelations[]> = {};
-
-  rates.forEach((rate) => {
-    if (!grouped[rate.machineTypeId]) {
-      grouped[rate.machineTypeId] = [];
-    }
-    grouped[rate.machineTypeId].push(rate);
-  });
-
-  return grouped;
-};
-
-// Player count analysis
-export const getPlayerCountDistribution = (
-  rates: RateByPlayers[]
-): Record<number, number> => {
-  const distribution: Record<number, number> = {};
-
-  rates.forEach((rate) => {
-    distribution[rate.noOfPlayers] = (distribution[rate.noOfPlayers] || 0) + 1;
-  });
-
-  return distribution;
-};
-
-export const getMostCommonPlayerCount = (rates: RateByPlayers[]): number => {
-  const distribution = getPlayerCountDistribution(rates);
-  let maxCount = 0;
-  let mostCommon = 1;
-
-  Object.entries(distribution).forEach(([playerCount, count]) => {
-    if (count > maxCount) {
-      maxCount = count;
-      mostCommon = parseInt(playerCount);
-    }
-  });
-
-  return mostCommon;
-};
-
-// Price filtering helpers
-export const filterRatesByPriceRange = (
-  rates: RateByPlayers[],
-  minPrice: number,
-  maxPrice: number
-): RateByPlayers[] => {
-  return rates.filter(
-    (rate) => rate.price >= minPrice && rate.price <= maxPrice
-  );
-};
-
-export const filterRatesByPlayerRange = (
-  rates: RateByPlayers[],
-  minPlayers: number,
-  maxPlayers: number
-): RateByPlayers[] => {
-  return rates.filter(
-    (rate) => rate.noOfPlayers >= minPlayers && rate.noOfPlayers <= maxPlayers
-  );
-};
-
-// Rate comparison helpers
-export const findCheapestRate = (
-  rates: RateByPlayers[]
-): RateByPlayers | null => {
-  if (rates.length === 0) return null;
-  return rates.reduce((cheapest, current) =>
-    current.price < cheapest.price ? current : cheapest
-  );
-};
-
-export const findMostExpensiveRate = (
-  rates: RateByPlayers[]
-): RateByPlayers | null => {
-  if (rates.length === 0) return null;
-  return rates.reduce((expensive, current) =>
-    current.price > expensive.price ? current : expensive
-  );
-};
-
-export const findBestValueRate = (
-  rates: RateByPlayers[]
-): RateByPlayers | null => {
-  if (rates.length === 0) return null;
-  return rates.reduce((bestValue, current) => {
-    const currentPricePerPlayer = calculatePricePerPlayer(current);
-    const bestValuePricePerPlayer = calculatePricePerPlayer(bestValue);
-    return currentPricePerPlayer < bestValuePricePerPlayer
-      ? current
-      : bestValue;
-  });
 };
 
 // Search query helper
@@ -327,6 +132,30 @@ export const createRateByPlayersSearchQuery = (
 
   return where;
 };
+
+// Statistics interface
+export interface RateByPlayersStats {
+  total: number;
+  playerCountDistribution: Record<number, number>;
+  priceRanges: {
+    min: number;
+    max: number;
+    average: number;
+    median: number;
+  };
+  averagePricePerPlayer: number;
+  mostCommonPlayerCount: number;
+  byMachineType: Record<
+    string,
+    {
+      machineTypeId: string;
+      machineTypeName: string;
+      rateCount: number;
+      averagePrice: number;
+      playerCounts: number[];
+    }
+  >;
+}
 
 // Legacy type aliases for backward compatibility
 export type IRateByPlayers = RateByPlayers;

@@ -22,8 +22,13 @@ Transformed the basic machine model into a production-grade implementation follo
 - `CreateMachineInput` - Input for creating machines
 - `UpdateMachineInput` - Input for updating machines
 - `MachineFilters` - Query filtering options
-- `MachinePaginationOptions` - Pagination configuration
+- `MachineTypePaginationOptions` - Pagination configuration
 - `MachineResponse` - API response format
+
+#### Rate Management Interfaces
+
+- `RateByPlayersInput` - Input for creating rates
+- `UpdateRateByPlayersInput` - Input for updating rates
 
 #### Supporting Interfaces
 
@@ -241,11 +246,31 @@ const categoryBreakdown = countMachinesByCategory(machines);
 const availableMachines = getAvailableMachines(machines);
 ```
 
+## Rate Management
+
+### Adding Rates
+
+```typescript
+const newRate: RateByPlayersInput = {
+  noOfPlayers: 4,
+  price: 2000,
+  machineTypeId: "machine-type-123"
+};
+```
+
+### Updating Rates
+
+```typescript
+const updateRate: UpdateRateByPlayersInput = {
+  price: 2500  // Only update price
+};
+```
+
 ## Next Steps
 
-1. **Generate Prisma Types**: Add machine models to main schema and regenerate
-2. **Create Services**: Build service layer following role/permission patterns
-3. **Build Controllers**: Create modular controllers for machine management
+1. ✅ **Generate Prisma Types**: Added machine models to schema and regenerated
+2. ✅ **Create Services**: Built service layer with proper separation of concerns
+3. ✅ **Build Controllers**: Created modular controllers for machine and rate management
 4. **Add Tests**: Unit tests for all utility functions
 5. **API Documentation**: Document all endpoints and interfaces
 
