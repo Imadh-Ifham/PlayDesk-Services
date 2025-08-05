@@ -32,7 +32,7 @@ export const getSystemRoles = async (req: Request, res: Response) => {
 // Create global role (admin only)
 export const createGlobalRole = async (req: Request, res: Response) => {
   try {
-    const { name, permissionIds = [] } = req.body;
+    const { name, permissionKeys = [] } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -40,7 +40,7 @@ export const createGlobalRole = async (req: Request, res: Response) => {
       });
     }
 
-    const role = await GlobalRoleService.create({ name, permissionIds });
+    const role = await GlobalRoleService.create({ name, permissionKeys });
     const response = roleToResponse(role as any);
     res.status(201).json(response);
   } catch (error: any) {

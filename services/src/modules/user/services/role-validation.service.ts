@@ -26,17 +26,17 @@ export class RoleValidationService {
     return lounge;
   }
 
-  static async validatePermissionIds(permissionIds: string[]) {
-    if (permissionIds.length === 0) return [];
+  static async validatePermissionKeys(permissionKeys: string[]) {
+    if (permissionKeys.length === 0) return [];
 
     const permissions = await prisma.permission.findMany({
       where: {
-        id: { in: permissionIds },
+        key: { in: permissionKeys },
       },
     });
 
-    if (permissions.length !== permissionIds.length) {
-      throw new Error("One or more permission IDs are invalid");
+    if (permissions.length !== permissionKeys.length) {
+      throw new Error("One or more permission keys are invalid");
     }
 
     return permissions;

@@ -20,12 +20,12 @@ export interface RoleModel {
 
 // Role with relations
 export interface RoleWithRelations extends RoleModel {
-  account: PDAccount | null; // Can be null for global roles
+  account?: PDAccount | null; // Can be null for global roles, optional for queries
   users?: User[];
   permissions: Array<
     RolePermission & {
       permission: Permission;
-      lounge: Lounge | null; // Can be null for global permissions
+      lounge?: Lounge | null; // Can be null for global permissions, optional for queries
     }
   >;
 }
@@ -41,14 +41,14 @@ export interface CreateRoleInput {
   roleType?: RoleType; // Optional, defaults to ACCOUNT
   accountId?: string | null; // Null for global roles
   loungeId: string; // For the role permissions
-  permissionIds?: string[];
+  permissionKeys?: string[];
 }
 
 // Update role input
 export interface UpdateRoleInput {
   name?: string;
   roleType?: RoleType;
-  permissionIds?: string[];
+  permissionKeys?: string[];
   loungeId?: string; // For updating role permissions
 }
 

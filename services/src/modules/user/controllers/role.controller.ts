@@ -44,7 +44,7 @@ export const getRoleById = async (req: Request, res: Response) => {
     if (!role) {
       return res.status(404).json({ error: "Role not found" });
     }
-
+    ``;
     res.json(role);
   } catch (error) {
     console.error("Error fetching role:", error);

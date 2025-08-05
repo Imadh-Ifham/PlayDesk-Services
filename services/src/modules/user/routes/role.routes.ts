@@ -65,7 +65,7 @@ router.post("/permissions", assignPermissionToRole);
 
 // DELETE /api/roles/:roleId/permissions/:permissionId/:loungeId? - Remove permission from role
 router.delete(
-  "/:roleId/permissions/:permissionId/:loungeId?",
+  "/:roleId/permissions/:permissionId/:loungeId",
   removePermissionFromRole
 );
 

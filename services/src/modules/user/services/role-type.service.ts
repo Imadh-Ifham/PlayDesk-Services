@@ -23,8 +23,8 @@ export class GlobalRoleService {
     });
   }
 
-  static async create(input: { name: string; permissionIds?: string[] }) {
-    const { name, permissionIds = [] } = input;
+  static async create(input: { name: string; permissionKeys?: string[] }) {
+    const { name, permissionKeys = [] } = input;
 
     // Validate name length
     if (
@@ -49,16 +49,16 @@ export class GlobalRoleService {
       throw new Error("Global role with this name already exists");
     }
 
-    // Validate permission IDs if provided
-    if (permissionIds.length > 0) {
+    // Validate permission keys if provided
+    if (permissionKeys.length > 0) {
       const permissions = await prisma.permission.findMany({
         where: {
-          id: { in: permissionIds },
+          key: { in: permissionKeys },
         },
       });
 
-      if (permissions.length !== permissionIds.length) {
-        throw new Error("One or more permission IDs are invalid");
+      if (permissions.length !== permissionKeys.length) {
+        throw new Error("One or more permission keys are invalid");
       }
     }
 
@@ -69,8 +69,8 @@ export class GlobalRoleService {
         roleType: RoleType.GLOBAL,
         accountId: null,
         permissions: {
-          create: permissionIds.map((permissionId: string) => ({
-            permissionId,
+          create: permissionKeys.map((permissionKey: string) => ({
+            permissionKey,
             loungeId: null, // Global permissions don't have lounge association
           })),
         },
