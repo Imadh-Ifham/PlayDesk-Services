@@ -5,6 +5,9 @@ CREATE TYPE "AccountStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'TRIALING');
 CREATE TYPE "LoungeStatus" AS ENUM ('ACTIVE', 'CLOSED', 'PENDING_APPROVAL');
 
 -- CreateEnum
+CREATE TYPE "RoleType" AS ENUM ('SYSTEM', 'GLOBAL', 'ACCOUNT');
+
+-- CreateEnum
 CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'DELETED');
 
 -- CreateTable
@@ -48,33 +51,30 @@ CREATE TABLE "lounge_services" (
 
 -- CreateTable
 CREATE TABLE "permissions" (
-    "id" TEXT NOT NULL,
     "key" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "permissions_pkey" PRIMARY KEY ("id")
+    "updated_at" TIMESTAMP(3) NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "role_permissions" (
     "role_id" TEXT NOT NULL,
-    "permission_id" TEXT NOT NULL,
-    "lounge_id" TEXT NOT NULL,
+    "permission_key" TEXT NOT NULL,
+    "lounge_id" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "role_permissions_pkey" PRIMARY KEY ("role_id","permission_id","lounge_id")
+    CONSTRAINT "role_permissions_pkey" PRIMARY KEY ("role_id","permission_key")
 );
 
 -- CreateTable
 CREATE TABLE "roles" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "isDefault" BOOLEAN NOT NULL DEFAULT false,
-    "account_id" TEXT NOT NULL,
+    "role_type" "RoleType" NOT NULL DEFAULT 'ACCOUNT',
+    "account_id" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -142,7 +142,7 @@ ALTER TABLE "lounge_services" ADD CONSTRAINT "lounge_services_service_id_fkey" F
 ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permission_key_fkey" FOREIGN KEY ("permission_key") REFERENCES "permissions"("key") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_lounge_id_fkey" FOREIGN KEY ("lounge_id") REFERENCES "lounges"("id") ON DELETE CASCADE ON UPDATE CASCADE;

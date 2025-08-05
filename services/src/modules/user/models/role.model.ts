@@ -5,22 +5,28 @@ import {
   RolePermission,
   Permission,
   PDAccount,
+  RoleType,
 } from "../../../../generated/prisma";
 
 // Re-export the Prisma-generated Role type with our extension
 export interface RoleModel {
   id: string;
   name: string;
-  isDefault: boolean;
-  accountId: string;
+  roleType: RoleType;
+  accountId: string | null; // Null for global roles
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Role with relations
 export interface RoleWithRelations extends RoleModel {
-  account: PDAccount;
+  account: PDAccount | null; // Can be null for global roles
   users?: User[];
   permissions: Array<
-    RolePermission & { permission: Permission; lounge: Lounge }
+    RolePermission & {
+      permission: Permission;
+      lounge: Lounge | null; // Can be null for global permissions
+    }
   >;
 }
 
@@ -32,16 +38,16 @@ export interface RoleWithPermissions extends RoleModel {
 // Create role input
 export interface CreateRoleInput {
   name: string;
-  accountId: string;
+  roleType?: RoleType; // Optional, defaults to ACCOUNT
+  accountId?: string | null; // Null for global roles
   loungeId: string; // For the role permissions
-  isDefault?: boolean;
   permissionIds?: string[];
 }
 
 // Update role input
 export interface UpdateRoleInput {
   name?: string;
-  isDefault?: boolean;
+  roleType?: RoleType;
   permissionIds?: string[];
   loungeId?: string; // For updating role permissions
 }
@@ -50,17 +56,19 @@ export interface UpdateRoleInput {
 export interface RoleResponse {
   id: string;
   name: string;
-  isDefault: boolean;
-  accountId: string;
+  roleType: RoleType;
+  accountId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
   permissions?: Permission[];
   userCount?: number; // Count of users with this role
 }
 
 // Role query filters
 export interface RoleFilters {
-  accountId?: string;
+  accountId?: string | null;
   loungeId?: string; // For filtering role permissions by lounge
-  isDefault?: boolean;
+  roleType?: RoleType;
   search?: string; // For name search
   hasPermission?: string; // Filter by permission key
 }
@@ -69,15 +77,16 @@ export interface RoleFilters {
 export interface RolePaginationOptions {
   page?: number;
   limit?: number;
-  sortBy?: "name" | "isDefault" | "createdAt";
+  sortBy?: "name" | "roleType" | "createdAt" | "updatedAt";
   sortOrder?: "asc" | "desc";
 }
 
 // Role statistics
 export interface RoleStats {
   total: number;
-  defaultRoles: number;
-  customRoles: number;
+  globalRoles: number;
+  accountRoles: number;
+  systemRoles: number;
   mostUsedRole: {
     id: string;
     name: string;
@@ -119,8 +128,10 @@ export function roleToResponse(role: RoleWithRelations): RoleResponse {
   return {
     id: role.id,
     name: role.name,
-    isDefault: role.isDefault,
+    roleType: role.roleType,
     accountId: role.accountId,
+    createdAt: role.createdAt,
+    updatedAt: role.updatedAt,
     permissions: role.permissions.map((rp) => rp.permission),
     userCount: role.users?.length || 0,
   };
@@ -131,15 +142,30 @@ export function rolesToResponse(roles: RoleWithRelations[]): RoleResponse[] {
   return roles.map(roleToResponse);
 }
 
-// Type guard to check if role is default
-export function isDefaultRole(role: RoleModel): boolean {
-  return role.isDefault;
+// Type guard to check if role is global (accountId is null or roleType is GLOBAL)
+export function isGlobalRole(role: RoleModel): boolean {
+  return role.accountId === null || role.roleType === RoleType.GLOBAL;
+}
+
+// Type guard to check if role is system role
+export function isSystemRole(role: RoleModel): boolean {
+  return role.roleType === RoleType.SYSTEM;
+}
+
+// Type guard to check if role is account-specific
+export function isAccountRole(role: RoleModel): boolean {
+  return role.roleType === RoleType.ACCOUNT && role.accountId !== null;
 }
 
 // Type guard to check if role can be deleted
 export function canDeleteRole(role: RoleWithRelations): boolean {
-  // Default roles and roles with users cannot be deleted
-  return !role.isDefault && (role.users?.length || 0) === 0;
+  // System roles and global roles cannot be deleted
+  // Also roles with users cannot be deleted
+  return (
+    !isSystemRole(role) &&
+    !isGlobalRole(role) &&
+    (role.users?.length || 0) === 0
+  );
 }
 
 // Helper function to check if role has specific permission

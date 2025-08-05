@@ -12,8 +12,17 @@ function getMigrationName(): string {
 function runCommand(command: string) {
   try {
     execSync(command, { stdio: "inherit" });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`❌ Command failed: ${command}`);
+
+    // Show the actual error output if available
+    if (error.stdout) {
+      console.error("🔍 STDOUT:", error.stdout.toString());
+    }
+    if (error.stderr) {
+      console.error("❌ STDERR:", error.stderr.toString());
+    }
+
     process.exit(1);
   }
 }
