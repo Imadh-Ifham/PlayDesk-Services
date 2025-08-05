@@ -88,13 +88,23 @@ export class RolePermissionService {
     }
 
     // Remove assignment
+    // Remove assignment using the correct composite key (including loungeId if present)
     return prisma.rolePermission.delete({
-      where: {
-        roleId_permissionId: {
-          roleId,
-          permissionId,
-        },
-      },
+      where: loungeId !== undefined
+        ? {
+            roleId_permissionId_loungeId: {
+              roleId,
+              permissionId,
+              loungeId,
+            },
+          }
+        : {
+            roleId_permissionId_loungeId: {
+              roleId,
+              permissionId,
+              loungeId: null,
+            },
+          },
     });
   }
 }
