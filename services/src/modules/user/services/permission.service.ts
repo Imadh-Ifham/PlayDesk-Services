@@ -51,23 +51,22 @@ export class PermissionService {
     }
 
     // Get permissions with relations
-    const permissions = await prisma.permission.findMany({
-      where,
-      include: {
-        roles: {
-          include: {
-            role: true,
+    const [permissions, total] = await prisma.$transaction([
+      prisma.permission.findMany({
+        where,
+        include: {
+          roles: {
+            include: {
+              role: true,
+            },
           },
         },
-      },
-      orderBy: { [sortBy]: sortOrder },
-      skip,
-      take,
-    });
-
-    // Get total count
-    const total = await prisma.permission.count({ where });
-
+        orderBy: { [sortBy]: sortOrder },
+        skip,
+        take,
+      }),
+      prisma.permission.count({ where }),
+    ]);
     // Transform to response format
     const response = permissionsToResponse(permissions);
 

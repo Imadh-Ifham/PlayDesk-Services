@@ -49,11 +49,21 @@ export class RoleService {
     if (hasPermission || loungeId) {
       where.permissions = {
         some: {
-          ...(hasPermission && {
-            permission: {
-              key: hasPermission,
-            },
-          }),
+          ...(hasPermission && (() => {
+            // Support hasPermission as "category:action" string or {category, action} object
+            if (typeof hasPermission === "string") {
+              const [category, action] = hasPermission.split(":");
+              return { permission: { category, action } };
+            } else if (
+              typeof hasPermission === "object" &&
+              hasPermission !== null &&
+              "category" in hasPermission &&
+              "action" in hasPermission
+            ) {
+              return { permission: { category: hasPermission.category, action: hasPermission.action } };
+            }
+            return {};
+          })()),
           ...(loungeId && { loungeId }),
         },
       };
