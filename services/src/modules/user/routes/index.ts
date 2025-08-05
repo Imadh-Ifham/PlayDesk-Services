@@ -12,9 +12,9 @@ const router = Router();
 router.use("/permissions", permissionRoutes);
 
 // /api/user/roles
-router.use("/roles", roleRoutes);
+// router.use("/roles", roleRoutes);
 
 // /api/user (main user routes)
-router.use("/", userRoutes);
+// router.use("/", userRoutes);
 
 export default router;
