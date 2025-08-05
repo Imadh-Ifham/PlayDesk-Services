@@ -254,7 +254,7 @@ const availableMachines = getAvailableMachines(machines);
 const newRate: RateByPlayersInput = {
   noOfPlayers: 4,
   price: 2000,
-  machineTypeId: "machine-type-123"
+  machineTypeId: "machine-type-123",
 };
 ```
 
@@ -262,7 +262,7 @@ const newRate: RateByPlayersInput = {
 
 ```typescript
 const updateRate: UpdateRateByPlayersInput = {
-  price: 2500  // Only update price
+  price: 2500, // Only update price
 };
 ```
 

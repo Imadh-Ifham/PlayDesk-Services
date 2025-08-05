@@ -218,20 +218,23 @@ export class MachineTypeService {
 
   async addRateToMachineType(machineTypeId: string, rate: RateByPlayersInput) {
     return await this.prisma.rateByPlayers.create({
-      data: rate
+      data: rate,
     });
   }
 
-  async updateRateForMachineType(rateId: string, data: UpdateRateByPlayersInput) {
+  async updateRateForMachineType(
+    rateId: string,
+    data: UpdateRateByPlayersInput
+  ) {
     return await this.prisma.rateByPlayers.update({
       where: { id: rateId },
-      data
+      data,
     });
   }
 
   async deleteRateFromMachineType(rateId: string) {
     return await this.prisma.rateByPlayers.delete({
-      where: { id: rateId }
+      where: { id: rateId },
     });
   }
 
