@@ -1,5 +1,4 @@
 model Permission {
-  id          String   @id @default(uuid())
   key         String   @unique
   name        String   // Human readable name for the permission
   description String
@@ -13,15 +12,15 @@ model Permission {
 
 model RolePermission {
   roleId       String     @map("role_id")
-  permissionId String     @map("permission_id")
+  permissionKey String     @map("permission_key")
   loungeId     String?     @map("lounge_id")
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
   lounge       Lounge?     @relation(fields: [loungeId], references: [id], onDelete: Cascade)
 
-  @@id([roleId, permissionId])
+  @@id([roleId, permissionKey])
   @@map("role_permissions")
 }
