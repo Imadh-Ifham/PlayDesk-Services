@@ -1,199 +1,357 @@
 # PlayDesk Services
 
-**PlayDesk Services** is a scalable and modular Game Lounge Management and Booking System backend designed for both customers and game lounge owners. Previously branded as **SaloGame**, the project has now evolved into a TypeScript-based Node.js service with a modular architecture, offering better maintainability and scalability.
+This directory contains the backend services for the PlayDesk application, a TypeScript-based Node.js API server with PostgreSQL database integration and Firebase authentication.
 
----
+## 🏗️ Architecture Overview
 
-## 🧩 Overview
+The services layer is built using a modular architecture with the following key components:
 
-PlayDesk enables:
+- **Express.js** - Web framework for building RESTful APIs
+- **Prisma** - Database ORM for PostgreSQL integration
+- **Firebase Admin SDK** - Authentication and authorization
+- **TypeScript** - Type-safe JavaScript development
 
-- Customers to view available gaming machines and book time slots.
-- Admins and lounge owners to manage bookings, machine inventory, events, and user access levels.
+## 📁 Directory Structure
 
-> Note: This project was formerly called **SaloGame** and has now been **rebranded as PlayDesk**. It no longer uses **Konva.js**.
-
----
-
-## 🚀 Features
-
-- Customer booking portal with real-time availability
-- Admin dashboard for managing game lounges
-- Role-based user access (Customer, Manager, Owner)
-- Game machine management
-- Booking management with calendar support
-- Event and promotion scheduling
-- Microservices for each core domain
-- Shared packages for types and utilities
-- Containerized environment using Docker
-
----
-
-## 🏗️ Architecture
-
-- **Modular Backend Service** with distinct modules for core domains (users, bookings, lounges, machines)
-- **Express.js** REST API with TypeScript
-- **Prisma ORM** for PostgreSQL database management
-- **Firebase Authentication** for secure user management
-- **Modular structure** with dedicated controllers, services, routes, and models per feature
-
----
-
-## 🛠 Tech Stack
-
-| Layer    | Technology              |
-| -------- | ----------------------- |
-| Backend  | Node.js + Express.js    |
-| Language | TypeScript              |
-| Database | PostgreSQL + Prisma ORM |
-| Auth     | Firebase Authentication |
-| API      | RESTful API             |
-| Package  | pnpm                    |
-
----
-
-## 📁 Project Structure
-
-```plaintext
-/PlayDesk-Services
-├── services/                  # Main backend service
-│   ├── src/                  # Source code
-│   │   ├── app.ts           # Express application setup
-│   │   ├── server.ts        # Server entry point
-│   │   ├── config/          # Configuration files
-│   │   │   ├── db.ts        # Database connection
-│   │   │   └── firebase.ts  # Firebase setup
-│   │   ├── middlewares/     # Express middlewares
-│   │   │   ├── authGuard.ts # Authentication middleware
-│   │   │   └── errorHandler.ts # Error handling
-│   │   ├── modules/         # Feature modules
-│   │   │   ├── user/        # User management (active)
-│   │   │   │   ├── controllers/
-│   │   │   │   ├── models/
-│   │   │   │   ├── routes/
-│   │   │   │   ├── services/
-│   │   │   │   └── types/
-│   │   │   ├── booking/     # Booking system (planned)
-│   │   │   ├── lounge/      # Lounge management (planned)
-│   │   │   └── machine/     # Machine management (planned)
-│   │   ├── seeds/           # Database seeding
-│   │   └── utils/           # Utility functions
-│   ├── prisma/              # Database management
-│   │   ├── schema.prisma    # Database schema
-│   │   ├── base.prisma      # Base schema configuration
-│   │   ├── models/          # Prisma models
-│   │   ├── enums/           # Database enums
-│   │   └── migrations/      # Database migrations
-│   ├── generated/           # Auto-generated Prisma client
-│   ├── package.json         # Dependencies and scripts
-│   ├── tsconfig.json        # TypeScript configuration
-│   └── README.md            # Service-specific documentation
-└── README.md                # This file - project overview
+```
+services/
+├── src/                          # Source code
+│   ├── app.ts                   # Express application setup
+│   ├── server.ts                # Server entry point
+│   ├── config/                  # Configuration files
+│   │   ├── db.ts               # Database connection setup
+│   │   └── firebase.ts         # Firebase initialization
+│   ├── middlewares/            # Express middlewares
+│   │   ├── authGuard.ts        # JWT token verification
+│   │   └── errorHandler.ts     # Global error handling
+│   ├── modules/                # Feature modules
+│   │   ├── booking/            # Booking system (empty)
+│   │   ├── lounge/             # Lounge management
+│   │   │   ├── controllers/    # Lounge controllers
+│   │   │   ├── models/         # Lounge data models
+│   │   │   ├── routes/         # Lounge route definitions
+│   │   │   └── services/       # Lounge business logic
+│   │   ├── machine/            # Machine management (empty)
+│   │   └── user/               # User management
+│   │       ├── controllers/    # User controllers
+│   │       ├── models/         # User data models
+│   │       ├── routes/         # User route definitions
+│   │       └── services/       # User business logic
+│   ├── scripts/                # Database and utility scripts
+│   ├── seeds/                  # Database seeding files
+│   └── utils/                  # Utility functions
+├── prisma/                     # Database schema and migrations
+│   ├── schema.prisma          # Main Prisma schema
+│   ├── base.prisma            # Base configuration
+│   ├── enums/                 # Enum definitions
+│   └── models/                # Model definitions
+├── generated/                  # Auto-generated Prisma client
+│   └── prisma/                # Generated Prisma client files
+├── package.json               # Node.js dependencies
+├── pnpm-lock.yaml            # Package lock file
+├── prisma-merge.json         # Prisma merge configuration
+└── tsconfig.json             # TypeScript configuration
 ```
 
-## ⚙️ Getting Started
+## 🚀 Getting Started
 
-### 1. Clone the Repository
+### Prerequisites
+
+- Node.js (v18 or higher)
+- pnpm package manager
+- PostgreSQL database
+- Firebase project with service account
+
+### Environment Setup
+
+1. Create a `.env` file in the services directory with the following variables:
+
+   ```env
+   DATABASE_URL="postgresql://username:password@localhost:5432/playdesk"
+   PORT=3000
+   FIREBASE_SERVICE_ACCOUNT='{...}' # Firebase service account JSON
+   ```
+
+2. Alternatively, create a `firebase-service-account.json` file in the services directory.
+
+### Installation & Development
 
 ```bash
-git clone https://github.com/Imadh-Ifham/PlayDesk-Services.git
-cd PlayDesk-Services
-```
-
-### 2. Navigate to Services Directory
-
-```bash
-cd services
-```
-
-### 3. Install Dependencies
-
-```bash
+# Install dependencies
 pnpm install
-```
 
-> Make sure pnpm is installed globally (`npm i -g pnpm`)
+# Generate Prisma client
+pnpm prisma generate
 
-### 4. Setup Environment Variables
-
-Create a `.env` file in the services directory:
-
-```bash
-cp .env.example .env
-```
-
-Configure the following environment variables:
-
-- Database connection URL
-- Firebase service account credentials
-- Server port and other configurations
-
-### 5. Setup Database
-
-Generate Prisma client and run migrations:
-
-```bash
-pnpm prisma:generate
+# Run database migrations
 pnpm prisma migrate dev
+
+# Start development server
+pnpm run dev
 ```
 
-### 6. Seed Database (Optional)
-
-Populate the database with initial data:
+### Production
 
 ```bash
-pnpm seed
+# Build the application
+pnpm run build
+
+# Start production server
+pnpm start
 ```
 
-### 7. Run the Service
+## 🔧 Core Components
 
-Start the development server:
+### Database Configuration (`src/config/db.ts`)
 
-```bash
-pnpm dev
-```
+- Initializes Prisma client connection to PostgreSQL
+- Handles database connection errors
+- Exports prisma instance for use across the application
 
-The API will be available at `http://localhost:3000` (or your configured port).
+### Firebase Configuration (`src/config/firebase.ts`)
 
-## 📖 Module Documentation
+- Initializes Firebase Admin SDK
+- Supports both environment variable and file-based service account configuration
+- Provides Firebase admin instance for authentication operations
 
-Each module has its own detailed documentation:
+### Authentication Middleware (`src/middlewares/authGuard.ts`)
 
-- **User Module**: See `services/src/modules/user/README.md` (when available)
-- **Booking Module**: See `services/src/modules/booking/README.md` (when available)
-- **Lounge Module**: See `services/src/modules/lounge/README.md` (when available)
-- **Machine Module**: See `services/src/modules/machine/README.md` (when available)
+- Verifies Firebase JWT tokens from Authorization headers
+- Protects API routes requiring authentication
+- Adds decoded user information to request object
+- Returns 401 for invalid or missing tokens
 
-For detailed service documentation, refer to `services/README.md`.
+### Error Handling (`src/middlewares/errorHandler.ts`)
 
-## 🔧 Available Scripts
+- Global error handler for Express application
+- Logs errors and returns appropriate HTTP status codes
+- Provides consistent error response format
 
-When working in the `services/` directory:
+### Application Setup (`src/app.ts`)
 
-| Script                  | Description                              |
-| ----------------------- | ---------------------------------------- |
-| `pnpm dev`              | Start development server with hot reload |
-| `pnpm build`            | Build the application for production     |
-| `pnpm start`            | Start the production server              |
-| `pnpm prisma:generate`  | Generate Prisma client                   |
-| `pnpm prisma:merge`     | Merge Prisma schema files                |
-| `pnpm seed`             | Seed database with initial data          |
-| `pnpm seed:permissions` | Seed permission data                     |
+- Configures Express application with security middleware:
+  - **Helmet** - Security headers
+  - **CORS** - Cross-origin resource sharing
+  - **Morgan** - HTTP request logging
+- Sets up route structure (currently commented out)
+- Applies authentication guard to protected routes
 
-## 🌐 API Documentation
+### Server Entry Point (`src/server.ts`)
 
-The API provides RESTful endpoints for:
+- Initializes database connection
+- Initializes Firebase configuration
+- Starts Express server on specified port
+- Handles startup errors gracefully
 
-- **User Management**: Authentication, profiles, roles, and permissions
-- **Booking System**: Time slot management and reservations (in development)
-- **Lounge Management**: Venue and facility management (in development)
-- **Machine Management**: Gaming equipment inventory (in development)
+## 🗄️ Database Schema
 
-Detailed API documentation will be available at `/api/docs` when the service is running (if implemented).
+The application uses Prisma as the ORM with PostgreSQL. The schema is defined in `prisma/schema.prisma` and generates a client in the `generated/prisma` directory.
 
----
+### Key Features:
 
-## 👨‍💻 Project Owner
+- Type-safe database queries
+- Automatic migration generation
+- Custom output directory for generated client
 
-PlayDesk is engineered and owned by Imadh Ifham and team.
-Originally developed under the name SaloGame, it has been rebranded and restructured for scalability and performance under the new brand.
+## 🔐 Authentication Flow
+
+1. Client sends request with `Authorization: Bearer <token>` header
+2. `authGuard` middleware extracts and verifies the JWT token using Firebase Admin SDK
+3. On success, decoded user information is added to the request object
+4. On failure, middleware returns 401 Unauthorized response
+
+## 📦 Dependencies
+
+### Production Dependencies
+
+- **`express`** - Fast, unopinionated web framework for Node.js used to build the REST API
+- **`@prisma/client`** - Auto-generated, type-safe database client for database operations
+- **`firebase-admin`** - Firebase Admin SDK for server-side authentication and user management
+- **`cors`** - Express middleware to enable Cross-Origin Resource Sharing (CORS)
+- **`helmet`** - Security middleware that sets various HTTP headers to secure Express apps
+- **`morgan`** - HTTP request logger middleware for Express
+- **`dotenv`** - Loads environment variables from `.env` file into `process.env`
+- **`bcryptjs`** - Library for hashing passwords and sensitive data
+- **`@types/bcryptjs`** - TypeScript type definitions for bcryptjs
+
+### Development Dependencies
+
+- **`typescript`** - TypeScript compiler for type-safe JavaScript development
+- **`ts-node`** - TypeScript execution environment and REPL for Node.js
+- **`nodemon`** - Development utility that automatically restarts the server when file changes are detected
+- **`prisma`** - Database toolkit for schema migration, introspection, and client generation
+- **`prisma-merge`** - Tool to merge multiple Prisma schema files into a single schema
+- **`@types/cors`** - TypeScript type definitions for the cors library
+- **`@types/express`** - TypeScript type definitions for Express.js
+- **`@types/morgan`** - TypeScript type definitions for the morgan logger
+- **`@types/node`** - TypeScript type definitions for Node.js core modules
+
+## 🔄 Available Scripts
+
+### Development Scripts
+
+- **`pnpm run dev`** - Start development server with hot reload using nodemon and ts-node
+  ```bash
+  pnpm run dev
+  ```
+  This starts the server in development mode, automatically restarting when you make changes to the code.
+
+### Build Scripts
+
+- **`pnpm run build`** - Compile TypeScript to JavaScript for production
+
+  ```bash
+  pnpm run build
+  ```
+
+  Compiles all TypeScript files to the `dist/` directory for production deployment.
+
+- **`pnpm start`** - Start production server from compiled JavaScript
+  ```bash
+  pnpm start
+  ```
+  Runs the compiled JavaScript from the `dist/` directory. Make sure to run `build` first.
+
+### Database Scripts
+
+- **`pnpm run prisma:merge`** - Merge multiple Prisma schema files into one
+
+  ```bash
+  pnpm run prisma:merge
+  ```
+
+  Combines all `.prisma` files from the `prisma/` directory into `prisma/schema.prisma`.
+
+- **`pnpm run prisma:generate`** - Merge schemas and generate Prisma client
+
+  ```bash
+  pnpm run prisma:generate
+  ```
+
+  Runs schema merge first, then generates the Prisma client in the `generated/` directory.
+
+- **`pnpm run migrate`** - Run database migration script with a required migration name
+
+  ```bash
+  pnpm run migrate -- --name <migration-name>
+  ```
+
+  Executes the custom migration script located at `src/scripts/migrate.ts`. The script requires a `--name` parameter to specify the migration name. This command will:
+
+  1. First run `prisma:generate` to merge schemas and generate the Prisma client
+  2. Then run `prisma migrate dev` with the provided migration name
+
+  **Example:**
+
+  ```bash
+  pnpm run migrate -- --name add-publicId-non-nullable
+  ```
+
+### Seeding Scripts
+
+- **`pnpm run seed`** - Run all database seeds
+
+  ```bash
+  pnpm run seed
+  ```
+
+  Executes the main seeding script that populates the database with initial data.
+
+- **`pnpm run seed:permissions`** - Seed permissions data only
+
+  ```bash
+  pnpm run seed:permissions
+  ```
+
+  Populates the database with permission records for role-based access control.
+
+- **`pnpm run seed:roles`** - Seed roles data only
+
+  ```bash
+  pnpm run seed:roles
+  ```
+
+  Populates the database with role definitions and their associated permissions.
+
+- **`pnpm run seed:roles:test`** - Run role seeding tests
+  ```bash
+  pnpm run seed:roles:test
+  ```
+  Executes tests for the role seeding functionality to ensure data integrity.
+
+## 🚧 Development Status
+
+The service architecture is set up with the following module status:
+
+- **User Module** - ✅ Structure implemented (controllers, models, routes, services directories)
+- **Lounge Module** - ✅ Structure implemented (controllers, models, routes, services directories)
+- **Booking Module** - ⏳ Directory created, awaiting implementation
+- **Machine Module** - 🔄 Implementation in progress (August 2025)
+
+### Machine Module Updates (August 2025)
+
+The Machine module has been updated with new models and TypeScript interfaces for managing gaming equipment in lounges. Key components:
+
+#### 1. Prisma Schema (`services/prisma/models/machine.prisma`)
+
+- **MachineType Model**
+
+  - Core fields: id, name, specifications, description, imageUrl
+  - Lounge association through loungeId
+  - Relations to Machine model
+  - Timestamps for creation and updates
+
+- **Machine Model**
+  - Unique identifier and serial number tracking
+  - Machine Block types: Console, PC-L, PC-R
+  - Status tracking (online/offline)
+  - Relations to MachineType and Lounge
+  - Full timestamp support
+
+#### 2. TypeScript Models
+
+**Machine Model** (`src/modules/machine/models/machine.model.ts`)
+
+- Interface for machine data with relations
+- Enums for machine block types and status
+- Type definitions for create/update operations
+- Prisma query include helpers
+
+**MachineType Model** (`src/modules/machine/models/machineType.model.ts`)
+
+- Complete interface for machine types
+- Support for optional specifications and descriptions
+- Lounge relationship handling
+- Create/Update operation types
+
+**Rate Management** (`src/modules/machine/models/rateByPlayers.model.ts`)
+
+- Reserved for future implementation
+- Will handle machine pricing based on player count
+- Support for flexible rate structures
+
+Additional components:
+
+- **Database Scripts** - ✅ Migration scripts available in `src/scripts/`
+- **Database Seeding** - ✅ Seed files available in `src/seeds/`
+
+## 📝 Next Steps
+
+1. Complete implementation of user and lounge module functionality
+2. Implement booking and machine module structures and functionality
+3. Finalize database schema definitions in `prisma/models/`
+4. Set up database migrations and run initial seeding
+5. Add comprehensive testing for all modules
+6. Implement logging and monitoring
+7. Add API documentation (OpenAPI/Swagger)
+8. Configure CI/CD pipeline
+
+## 🤝 Contributing
+
+When adding new modules:
+
+1. Create a new directory under `src/modules/`
+2. Implement route handlers, controllers, and services
+3. Add appropriate tests
+4. Update this README with new functionality
+5. Uncomment and configure routes in `src/app.ts`
