@@ -301,15 +301,55 @@ const avgPricePerPlayer = getAveragePricePerPlayer(rates);
 - Price analysis and comparison tools
 - Utilization and popularity metrics
 
-## Next Steps
+## API Integration
+
+### 🛣️ **Route Structure**
+
+#### Machine Routes (`/machines`)
+
+```typescript
+GET    /                - Get all machines with filtering and pagination
+GET    /:id            - Get machine by ID
+POST   /               - Create new machine
+PUT    /:id           - Update machine
+DELETE /:id           - Delete machine
+GET    /stats         - Get machine statistics
+```
+
+#### Machine Type Routes (`/machine-types`)
+
+```typescript
+GET    /                                    - Get all machine types
+GET    /:id                                - Get machine type by ID
+POST   /                                   - Create machine type
+PUT    /:id                                - Update machine type
+DELETE /:id                                - Delete machine type
+GET    /stats                              - Get statistics
+POST   /:id/rates                          - Add rate to machine type
+PUT    /:machineTypeId/rates/:rateId       - Update rate
+```
+
+#### Rate Routes (`/rates`)
+
+```typescript
+GET    /               - Get all rates with filtering
+GET    /:id           - Get rate by ID
+POST   /              - Create new rate
+PUT    /:id           - Update rate
+DELETE /:id           - Delete rate
+GET    /stats         - Get rate statistics
+```
+
+## Implementation Status
 
 1. ✅ **Models Created**: All three production-grade models completed
 2. ✅ **Prisma Integration**: Generated types and proper integration
 3. ✅ **Validation Added**: Comprehensive validation for all inputs
 4. ✅ **Analytics Included**: Rich analytics and statistics support
-5. 🔄 **Create Services**: Build service layer following role/permission patterns
-6. 🔄 **Build Controllers**: Create modular controllers for machine management
-7. 🔄 **Add Tests**: Unit tests for all utility functions
-8. 🔄 **API Documentation**: Document all endpoints and interfaces
+5. ✅ **Create Services**: Built service layer with proper separation of concerns
+6. ✅ **Build Controllers**: Created modular controllers for all components
+7. ✅ **Route Setup**: Implemented complete REST API endpoints
+8. 🔄 **Add Tests**: Unit tests for all utility functions
+9. 🔄 **API Documentation**: Document all endpoints and interfaces
 
 Your machine module now has **enterprise-grade modular models** with comprehensive TypeScript support, validation, analytics, and follows all the best practices from your permission and role models!
