@@ -10,6 +10,7 @@ import {
   isSystemRole,
   canDeleteRole,
 } from "../models/role.model";
+import { RoleValidationService } from "./role-validation.service";
 
 export class RoleService {
   // Core role CRUD operations
@@ -146,6 +147,9 @@ export class RoleService {
   }
 
   static async create(input: CreateRoleInput) {
+    // Validate input thoroughly
+    await RoleValidationService.validateCreateRoleInput(input);
+
     const {
       name,
       roleType = RoleType.ACCOUNT,

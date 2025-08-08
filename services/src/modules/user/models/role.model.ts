@@ -40,7 +40,7 @@ export interface CreateRoleInput {
   name: string;
   roleType?: RoleType; // Optional, defaults to ACCOUNT
   accountId?: string | null; // Null for global roles
-  loungeId: string; // For the role permissions
+  loungeId?: string; // For the role permissions
   permissionKeys?: string[];
 }
 
@@ -106,15 +106,6 @@ export interface BulkRoleAssignmentInput {
   roleId: string;
 }
 
-// Default role types (common role names)
-export enum DefaultRoleTypes {
-  ADMIN = "admin",
-  MANAGER = "manager",
-  EMPLOYEE = "employee",
-  CUSTOMER = "customer",
-  GUEST = "guest",
-}
-
 // Role validation rules
 export const RoleValidation = {
   NAME_MIN_LENGTH: 2,
@@ -140,6 +131,11 @@ export function roleToResponse(role: RoleWithRelations): RoleResponse {
 // Helper function to transform multiple roles
 export function rolesToResponse(roles: RoleWithRelations[]): RoleResponse[] {
   return roles.map(roleToResponse);
+}
+
+// Type guard to check if value is a valid RoleType
+export function isValidRoleType(value: any): value is RoleType {
+  return Object.values(RoleType).includes(value);
 }
 
 // Type guard to check if role is global (accountId is null or roleType is GLOBAL)
