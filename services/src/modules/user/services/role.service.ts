@@ -10,6 +10,7 @@ import {
   isSystemRole,
   canDeleteRole,
 } from "../models/role.model";
+import { RoleValidationService } from "./role-validation.service";
 
 export class RoleService {
   // Core role CRUD operations
@@ -49,21 +50,7 @@ export class RoleService {
     if (hasPermission || loungeId) {
       where.permissions = {
         some: {
-          ...(hasPermission && (() => {
-            // Support hasPermission as "category:action" string or {category, action} object
-            if (typeof hasPermission === "string") {
-              const [category, action] = hasPermission.split(":");
-              return { permission: { category, action } };
-            } else if (
-              typeof hasPermission === "object" &&
-              hasPermission !== null &&
-              "category" in hasPermission &&
-              "action" in hasPermission
-            ) {
-              return { permission: { category: hasPermission.category, action: hasPermission.action } };
-            }
-            return {};
-          })()),
+          ...(hasPermission && { permissionKey: hasPermission }),
           ...(loungeId && { loungeId }),
         },
       };
@@ -160,12 +147,15 @@ export class RoleService {
   }
 
   static async create(input: CreateRoleInput) {
+    // Validate input thoroughly
+    await RoleValidationService.validateCreateRoleInput(input);
+
     const {
       name,
       roleType = RoleType.ACCOUNT,
       accountId,
       loungeId,
-      permissionIds = [],
+      permissionKeys = [],
     } = input;
 
     // Create role data
@@ -176,10 +166,10 @@ export class RoleService {
     };
 
     // Add permissions if provided
-    if (permissionIds.length > 0) {
+    if (permissionKeys.length > 0) {
       roleData.permissions = {
-        create: permissionIds.map((permissionId) => ({
-          permissionId,
+        create: permissionKeys.map((permissionKey) => ({
+          permissionKey,
           loungeId: roleType === RoleType.ACCOUNT ? loungeId : null,
         })),
       };
@@ -201,7 +191,7 @@ export class RoleService {
   }
 
   static async update(id: string, input: UpdateRoleInput) {
-    const { name, roleType, permissionIds, loungeId } = input;
+    const { name, roleType, permissionKeys, loungeId } = input;
 
     // Get existing role
     const existingRole = await prisma.role.findUnique({
@@ -240,7 +230,7 @@ export class RoleService {
     });
 
     // Update permissions if provided
-    if (permissionIds !== undefined) {
+    if (permissionKeys !== undefined) {
       const finalRoleType = roleType || existingRole.roleType;
       const finalLoungeId =
         finalRoleType === RoleType.ACCOUNT ? loungeId : null;
@@ -257,11 +247,11 @@ export class RoleService {
       }
 
       // Add new permissions
-      if (permissionIds.length > 0) {
+      if (permissionKeys.length > 0) {
         await prisma.rolePermission.createMany({
-          data: permissionIds.map((permissionId) => ({
+          data: permissionKeys.map((permissionKey) => ({
             roleId: id,
-            permissionId,
+            permissionKey: permissionKey,
             loungeId: finalLoungeId,
           })),
         });

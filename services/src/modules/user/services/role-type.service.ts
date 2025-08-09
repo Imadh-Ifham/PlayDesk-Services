@@ -1,6 +1,7 @@
 import prisma from "../../../config/db";
 import { RoleType } from "../../../../generated/prisma";
 import { CreateRoleInput, RoleValidation } from "../models/role.model";
+import { RoleValidationService } from "./role-validation.service";
 
 export class GlobalRoleService {
   static async findAll() {
@@ -23,44 +24,18 @@ export class GlobalRoleService {
     });
   }
 
-  static async create(input: { name: string; permissionIds?: string[] }) {
-    const { name, permissionIds = [] } = input;
+  static async create(input: { name: string; permissionKeys?: string[] }) {
+    const { name, permissionKeys = [] } = input;
 
-    // Validate name length
-    if (
-      name.length < RoleValidation.NAME_MIN_LENGTH ||
-      name.length > RoleValidation.NAME_MAX_LENGTH
-    ) {
-      throw new Error(
-        `Name must be between ${RoleValidation.NAME_MIN_LENGTH} and ${RoleValidation.NAME_MAX_LENGTH} characters`
-      );
-    }
+    // Create input for validation
+    const createInput: CreateRoleInput = {
+      name,
+      roleType: RoleType.GLOBAL,
+      permissionKeys,
+    };
 
-    // Check if global role with this name already exists
-    const existingRole = await prisma.role.findFirst({
-      where: {
-        name,
-        roleType: RoleType.GLOBAL,
-        accountId: null,
-      },
-    });
-
-    if (existingRole) {
-      throw new Error("Global role with this name already exists");
-    }
-
-    // Validate permission IDs if provided
-    if (permissionIds.length > 0) {
-      const permissions = await prisma.permission.findMany({
-        where: {
-          id: { in: permissionIds },
-        },
-      });
-
-      if (permissions.length !== permissionIds.length) {
-        throw new Error("One or more permission IDs are invalid");
-      }
-    }
+    // Validate input (this will skip lounge validation for global roles)
+    await RoleValidationService.validateCreateRoleInput(createInput);
 
     // Create global role
     return prisma.role.create({
@@ -69,8 +44,8 @@ export class GlobalRoleService {
         roleType: RoleType.GLOBAL,
         accountId: null,
         permissions: {
-          create: permissionIds.map((permissionId: string) => ({
-            permissionId,
+          create: permissionKeys.map((permissionKey: string) => ({
+            permissionKey,
             loungeId: null, // Global permissions don't have lounge association
           })),
         },

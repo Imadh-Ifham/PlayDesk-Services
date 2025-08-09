@@ -4,24 +4,24 @@ import { RolePermissionService } from "../services/role-permission.service";
 // Assign permission to role
 export const assignPermissionToRole = async (req: Request, res: Response) => {
   try {
-    const { roleId, permissionId, loungeId } = req.body;
+    const { roleId, permissionKey, loungeId } = req.body;
 
-    if (!roleId || !permissionId) {
+    if (!roleId || !permissionKey) {
       return res.status(400).json({
-        error: "Role ID and Permission ID are required",
+        error: "Role ID and Permission Key are required",
       });
     }
 
     await RolePermissionService.assignPermission({
       roleId,
-      permissionId,
+      permissionKey,
       loungeId,
     });
 
     res.status(201).json({
       message: "Permission assigned to role successfully",
       roleId,
-      permissionId,
+      permissionKey,
       loungeId: loungeId || null,
     });
   } catch (error: any) {
@@ -45,11 +45,11 @@ export const assignPermissionToRole = async (req: Request, res: Response) => {
 // Remove permission from role
 export const removePermissionFromRole = async (req: Request, res: Response) => {
   try {
-    const { roleId, permissionId, loungeId } = req.params;
+    const { roleId, permissionKey, loungeId } = req.params;
 
     await RolePermissionService.removePermission({
       roleId,
-      permissionId,
+      permissionKey,
       loungeId,
     });
 

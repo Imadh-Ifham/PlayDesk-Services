@@ -4,10 +4,10 @@ import { RoleType } from "../../../../generated/prisma";
 export class RolePermissionService {
   static async assignPermission(input: {
     roleId: string;
-    permissionId: string;
+    permissionKey: string;
     loungeId?: string;
   }) {
-    const { roleId, permissionId, loungeId } = input;
+    const { roleId, permissionKey, loungeId } = input;
 
     // Get role to determine type
     const role = await prisma.role.findUnique({
@@ -20,7 +20,7 @@ export class RolePermissionService {
 
     // Validate permission exists
     const permission = await prisma.permission.findUnique({
-      where: { id: permissionId },
+      where: { key: permissionKey },
     });
 
     if (!permission) {
@@ -48,7 +48,7 @@ export class RolePermissionService {
     const existingAssignment = await prisma.rolePermission.findFirst({
       where: {
         roleId,
-        permissionId,
+        permissionKey,
         loungeId: role.roleType === RoleType.ACCOUNT ? loungeId : null,
       },
     });
@@ -61,7 +61,7 @@ export class RolePermissionService {
     return prisma.rolePermission.create({
       data: {
         roleId,
-        permissionId,
+        permissionKey,
         loungeId: role.roleType === RoleType.ACCOUNT ? loungeId : null,
       },
     });
@@ -69,16 +69,16 @@ export class RolePermissionService {
 
   static async removePermission(input: {
     roleId: string;
-    permissionId: string;
+    permissionKey: string;
     loungeId?: string;
   }) {
-    const { roleId, permissionId, loungeId } = input;
+    const { roleId, permissionKey, loungeId } = input;
 
     // Check if assignment exists
     const existingAssignment = await prisma.rolePermission.findFirst({
       where: {
         roleId,
-        permissionId,
+        permissionKey,
         loungeId: loungeId || null,
       },
     });
@@ -87,24 +87,14 @@ export class RolePermissionService {
       throw new Error("Permission assignment not found");
     }
 
-    // Remove assignment
-    // Remove assignment using the correct composite key (including loungeId if present)
+    // Remove assignment using the correct composite key
     return prisma.rolePermission.delete({
-      where: loungeId !== undefined
-        ? {
-            roleId_permissionId_loungeId: {
-              roleId,
-              permissionId,
-              loungeId,
-            },
-          }
-        : {
-            roleId_permissionId_loungeId: {
-              roleId,
-              permissionId,
-              loungeId: null,
-            },
-          },
+      where: {
+        roleId_permissionKey: {
+          roleId,
+          permissionKey,
+        },
+      },
     });
   }
 }
